@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Clappr IPTV Player</title>
+
+    <!-- Clappr -->
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+
+        #player {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .input-box {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 999;
+        }
+
+        input {
+            width: 320px;
+            padding: 6px;
+        }
+
+        button {
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="input-box">
+    <input id="url" placeholder="Dán link m3u8 IPTV vào đây">
+    <button onclick="play()">Play</button>
+</div>
+
+<div id="player"></div>
+
+<script>
+    let player;
+
+    function play() {
+        const url = document.getElementById('url').value;
+
+        if (player) {
+            player.destroy();
+        }
+
+        player = new Clappr.Player({
+            source: url,
+            parentId: "#player",
+            autoPlay: true,
+            mute: false,
+            height: "100%",
+            width: "100%",
+        });
+    }
+</script>
+
+</body>
+</html>
