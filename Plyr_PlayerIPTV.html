@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Plyr IPTV Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Plyr CSS -->
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css"/>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .top-bar {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        gap: 6px;
+        z-index: 10;
+    }
+
+    .top-bar input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 6px;
+        border: none;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .top-bar button {
+        padding: 10px 16px;
+        border-radius: 6px;
+        border: none;
+        background: #1e90ff;
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .player-wrapper {
+        margin-top: 60px;
+    }
+</style>
+</head>
+<body>
+
+<!-- Thanh nhập link -->
+<div class="top-bar">
+    <input id="streamUrl" placeholder="Dán link m3u8 IPTV vào đây">
+    <button onclick="playStream()">Play</button>
+</div>
+
+<!-- Video -->
+<div class="player-wrapper">
+    <video id="player" playsinline controls></video>
+</div>
+
+<!-- Plyr + HLS -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+<script>
+    const video = document.getElementById('player');
+    const plyr = new Plyr(video, {
+        autoplay: true,
+        controls: [
+            'play-large', 'play',
+            'progress', 'current-time',
+            'mute', 'volume',
+            'settings', 'fullscreen'
+        ]
+    });
+
+    let hls;
+
+    function playStream() {
+        const url = document.getElementById('streamUrl').value;
+
+        if (!url) {
+            alert("Nhập link m3u8 trước!");
+            return;
+        }
+
+        if (hls) {
+            hls.destroy();
+        }
+
+        if (Hls.isSupported()) {
+            hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                plyr.play();
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url;
+            plyr.play();
+        } else {
+            alert("Trình duyệt không hỗ trợ HLS");
+        }
+    }
+</script>
+
+</body>
+</html>
