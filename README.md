@@ -1,6 +1,6 @@
 # phatxitd54-netizen.github.io
 
-# Trang tổng hợp các playlist IPTV tháng 09 năm 2025
+# Trang tổng hợp các playlist IPTV tháng 01 năm 2026
 
 
 ## IPTV tạo bởi PhatxitChim
