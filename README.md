@@ -14,3 +14,6 @@
   1. [List Hoiquan.Click](https://xem.hoiquan.click "hoiquan.click")
   2. [List VMT 2025](https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/vmttv "VMT")
 ## HTML tự nhập link M3U8
+1. [VideoJS](https://phatxitd54-netizen.github.io/VideoJS_IPTVPlayer.html "VideoJS")
+2. [Plyr](https://phatxitd54-netizen.github.io/Plyr_PlayerIPTV.html "Plyr")
+3. [Clappr](https://phatxitd54-netizen.github.io/Clappr_IPTVPlayer.html "Clappr")
