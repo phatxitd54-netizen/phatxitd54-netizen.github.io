@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>VideoJS IPTV Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Video.js CSS -->
+<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .top-bar {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        gap: 6px;
+        z-index: 10;
+    }
+
+    .top-bar input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 6px;
+        border: none;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .top-bar button {
+        padding: 10px 16px;
+        border-radius: 6px;
+        border: none;
+        background: #1e90ff;
+        color: #43e90ff;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .video-container {
+        margin-top: 60px;
+    }
+</style>
+</head>
+<body>
+
+<!-- Thanh nhập link -->
+<div class="top-bar">
+    <input id="streamUrl" placeholder="Dán link m3u8 IPTV vào đây">
+    <button onclick="playStream()">Play</button>
+</div>
+
+<!-- Video.js Player -->
+<div class="video-container">
+    <video
+        id="iptv-player"
+        class="video-js vjs-default-skin"
+        controls
+        preload="auto"
+        width="100%"
+        height="100%"
+    ></video>
+</div>
+
+<!-- Video.js JS -->
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js">
+</script>
+
+<script>
+    const player = videojs('iptv-player', {
+        autoplay: true,
+        fluid: true,
+        liveui: true
+    });
+
+    function playStream() {
+        const url = document.getElementById('streamUrl').value;
+
+        if (!url) {
+            alert("Nhập link m3u8 trước!");
+            return;
+        }
+
+        player.src({
+            src: url,
+            type: 'application/x-mpegURL'
+        });
+
+        player.play();
+    }
+</script>
+
+</body>
+</html>
