@@ -13,3 +13,4 @@
 
   1. [List Hoiquan.Click](https://xem.hoiquan.click "hoiquan.click")
   2. [List VMT 2025](https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/vmttv "VMT")
+## HTML tự nhập link M3U8
