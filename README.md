@@ -17,3 +17,6 @@
 1. [VideoJS](https://phatxitd54-netizen.github.io/VideoJS_IPTVPlayer.html "VideoJS")
 2. [Plyr](https://phatxitd54-netizen.github.io/Plyr_PlayerIPTV.html "Plyr")
 3. [Clappr](https://phatxitd54-netizen.github.io/Clappr_IPTVPlayer.html "Clappr")
+## Đặc biệt là có 1 thứ mới đó là Shaka Player!!!!
+1. [Shaka](https://phatxitd54-netizen.github.io/Shaka.html "Shaka_Player")
+
