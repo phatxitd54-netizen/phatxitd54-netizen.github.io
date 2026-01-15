@@ -17,3 +17,5 @@
 1. [VideoJS](https://phatxitd54-netizen.github.io/VideoJS_IPTVPlayer.html "VideoJS")
 2. [Plyr](https://phatxitd54-netizen.github.io/Plyr_PlayerIPTV.html "Plyr")
 3. [Clappr](https://phatxitd54-netizen.github.io/Clappr_IPTVPlayer.html "Clappr")
+# Đặc biệt là đang thử nghiệm 1 thứ mà...
+1. [MPD](https://phatxitd54-netizen.github.io/Shaka.html "MPD")
