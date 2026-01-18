@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shaka WebView Player</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css"/>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      width: 100%;
+      height: 100%;
+    }
+    #video-container {
+      width: 100%;
+      height: 100%;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
+    #errorBox {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      color: red;
+      background: rgba(0,0,0,0.7);
+      padding: 6px;
+      font-size: 12px;
+      display: none;
+      z-index: 9999;
+      max-height: 40%;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div id="video-container" data-shaka-player-container>
+  <video id="video" data-shaka-player autoplay playsinline muted></video>
+</div>
+
+<div id="errorBox"></div>
+
+<script>
+function sendToAndroid(msg) {
+  try {
+    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+    }
+  } catch (e) {}
+}
+
+function hexToBase64(hex) {
+  const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+function getQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    videoUrl: params.get("videoUrl"),
+    keys: params.get("keys")
+  };
+}
+
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.style.display = "block";
+  box.innerText = msg;
+  sendToAndroid({ type: "error", message: msg });
+}
+
+async function init() {
+  const { videoUrl, keys } = getQueryParams();
+  const video = document.getElementById("video");
+
+  if (!videoUrl) {
+    showError("Missing videoUrl");
+    return;
+  }
+
+  const player = new shaka.Player(video);
+  const ui = new shaka.ui.Overlay(player, video.parentElement, video);
+
+  let config = {};
+
+  if (keys) {
+    const keyList = keys.split(",");
+    let drmConfig = {};
+
+    keyList.forEach(item => {
+      const parts = item.split(":");
+      if (parts.length === 2) {
+        const kidB64 = hexToBase64(parts[0]);
+        const keyB64 = hexToBase64(parts[1]);
+        drmConfig[kidB64] = keyB64;
+      }
+    });
+
+    if (Object.keys(drmConfig).length > 0) {
+      config = {
+        drm: {
+          clearKeys: drmConfig
+        }
+      };
+    }
+  }
+
+  player.configure(config);
+
+  player.addEventListener("error", e => {
+    console.error(e);
+    showError("Shaka error: " + e.detail.message);
+  });
+
+  video.addEventListener("play", () => sendToAndroid({ type: "playing" }));
+  video.addEventListener("pause", () => sendToAndroid({ type: "paused" }));
+  video.addEventListener("waiting", () => sendToAndroid({ type: "buffering" }));
+  video.addEventListener("canplay", () => sendToAndroid({ type: "buffering_complete" }));
+
+  try {
+    await player.load(videoUrl);
+    sendToAndroid({ type: "loaded" });
+    video.muted = false;
+    video.play();
+  } catch (e) {
+    console.error(e);
+    showError("Load failed: " + e);
+  }
+
+  // Nhận lệnh từ Android
+  window.addEventListener("message", (event) => {
+    if (event.data === "play") video.play();
+    if (event.data === "pause") video.pause();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
