@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Shaka Player | ClearKey</title>
+  <title>Shaka Player v2</title>
 
   <!-- Shaka UI CSS -->
   <link rel="stylesheet"
@@ -30,7 +30,7 @@
   <video autoplay playsinline data-shaka-player></video>
 </div>
 
-<!-- ✅ SHAKA PLAYER COMPILED -->
+<!-- Shaka Player -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js"></script>
 
@@ -38,28 +38,28 @@
 function getParams() {
   const p = new URLSearchParams(window.location.search);
   return {
-    mpd: p.get("mpd"),
-    key: p.get("key")
+    videoUrl: p.get("videoUrl"),
+    keys: p.get("keys")
   };
 }
 
 async function init() {
-  const { mpd, key } = getParams();
+  const { videoUrl, keys } = getParams();
 
-  if (!mpd) {
-    alert("Thiếu tham số mpd");
+  if (!videoUrl) {
+    alert("Thiếu tham số videoUrl");
     return;
   }
 
   if (!shaka.Player.isBrowserSupported()) {
-    alert("Trình duyệt không hỗ trợ Shaka");
+    alert("Trình duyệt không hỗ trợ Shaka Player");
     return;
   }
 
   const video = document.querySelector("video");
   const player = new shaka.Player(video);
 
-  // UI config
+  /* UI */
   const ui = video.ui;
   ui.configure({
     controlPanelElements: [
@@ -73,28 +73,30 @@ async function init() {
     ]
   });
 
-  // Error log
+  /* Log lỗi */
   player.addEventListener("error", e => {
     console.error("Shaka error:", e.detail);
   });
 
-  // ===== CLEARKEY =====
-  if (key) {
-    const [kid, clearkey] = key.split(":");
-    if (kid && clearkey) {
-      player.configure({
-        drm: {
-          clearKeys: {
-            [kid]: clearkey
-          }
-        }
-      });
-    }
+  /* ===== CLEARKEY ===== */
+  if (keys) {
+    // hỗ trợ nhiều key: kid1:key1,kid2:key2
+    const clearKeys = {};
+    keys.split(",").forEach(pair => {
+      const [kid, key] = pair.split(":");
+      if (kid && key) {
+        clearKeys[kid] = key;
+      }
+    });
+
+    player.configure({
+      drm: { clearKeys }
+    });
   }
 
   try {
-    await player.load(mpd);
-    console.log("Đang phát:", mpd);
+    await player.load(videoUrl);
+    console.log("Đang phát:", videoUrl);
   } catch (e) {
     console.error("Load lỗi:", e);
     alert("Không phát được stream");
