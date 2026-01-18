@@ -2,16 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Shaka Player</title>
+  <title>Shaka WebView Player</title>
 
-  <!-- Shaka -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
-
-  <!-- Shaka Controls CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css"/>
 
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       background: black;
@@ -25,16 +22,37 @@
     video {
       width: 100%;
       height: 100%;
+      background: black;
+    }
+    #errorBox {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      color: red;
+      background: rgba(0,0,0,0.7);
+      padding: 8px;
+      font-size: 12px;
+      display: none;
     }
   </style>
 </head>
 <body>
 
 <div id="video-container" data-shaka-player-container>
-  <video id="video" data-shaka-player autoplay></video>
+  <video id="video" data-shaka-player autoplay playsinline></video>
 </div>
 
+<div id="errorBox"></div>
+
 <script>
+function hexToBase64(hex) {
+  const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
 function getQueryParams() {
   const params = new URLSearchParams(window.location.search);
   return {
@@ -43,9 +61,20 @@ function getQueryParams() {
   };
 }
 
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.style.display = "block";
+  box.innerText = msg;
+}
+
 async function init() {
   const { videoUrl, keys } = getQueryParams();
   const video = document.getElementById("video");
+
+  if (!videoUrl) {
+    showError("Missing videoUrl");
+    return;
+  }
 
   const player = new shaka.Player(video);
   const ui = new shaka.ui.Overlay(player, video.parentElement, video);
@@ -59,7 +88,9 @@ async function init() {
     keyList.forEach(item => {
       const parts = item.split(":");
       if (parts.length === 2) {
-        drmConfig[parts[0]] = parts[1];
+        const kidB64 = hexToBase64(parts[0]);
+        const keyB64 = hexToBase64(parts[1]);
+        drmConfig[kidB64] = keyB64;
       }
     });
 
@@ -74,11 +105,17 @@ async function init() {
 
   player.configure(config);
 
+  player.addEventListener("error", e => {
+    console.error(e);
+    showError("Shaka error: " + e.detail.message);
+  });
+
   try {
     await player.load(videoUrl);
-    console.log("Loaded!");
+    video.play();
   } catch (e) {
-    console.error("Error loading video:", e);
+    console.error(e);
+    showError("Load failed: " + e);
   }
 }
 
