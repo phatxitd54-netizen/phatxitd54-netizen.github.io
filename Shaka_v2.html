@@ -2,64 +2,44 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Shaka Player v2</title>
+  <title>Shaka Player v2 (Fixed)</title>
 
-  <!-- Shaka UI CSS -->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css"/>
 
   <style>
-    body {
-      margin: 0;
-      background: #000;
-    }
-    .shaka-video-container {
-      width: 100%;
-      height: 100vh;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      background: #000;
-    }
+    body { margin: 0; background: #000; }
+    .shaka-video-container { width: 100%; height: 100vh; }
+    video { width: 100%; height: 100%; background: #000; }
   </style>
 </head>
 <body>
 
 <div class="shaka-video-container" data-shaka-player-container>
-  <video autoplay playsinline data-shaka-player></video>
+  <!-- ❌ KHÔNG autoplay -->
+  <video playsinline data-shaka-player></video>
 </div>
 
-<!-- Shaka Player -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js"></script>
 
 <script>
 function getParams() {
-  const p = new URLSearchParams(window.location.search);
+  const p = new URLSearchParams(location.search);
   return {
     videoUrl: p.get("videoUrl"),
     keys: p.get("keys")
   };
 }
 
-async function init() {
+document.addEventListener("DOMContentLoaded", () => {
   const { videoUrl, keys } = getParams();
-
-  if (!videoUrl) {
-    alert("Thiếu tham số videoUrl");
-    return;
-  }
-
-  if (!shaka.Player.isBrowserSupported()) {
-    alert("Trình duyệt không hỗ trợ Shaka Player");
-    return;
-  }
+  if (!videoUrl) return alert("Thiếu videoUrl");
 
   const video = document.querySelector("video");
   const player = new shaka.Player(video);
 
-  /* UI */
+  /* ===== UI ===== */
   const ui = video.ui;
   ui.configure({
     controlPanelElements: [
@@ -73,37 +53,35 @@ async function init() {
     ]
   });
 
-  /* Log lỗi */
+  /* ===== DRM ===== */
+  if (keys) {
+    const clearKeys = {};
+    keys.split(",").forEach(k => {
+      const [kid, key] = k.split(":");
+      if (kid && key) clearKeys[kid] = key;
+    });
+    player.configure({ drm: { clearKeys } });
+  }
+
   player.addEventListener("error", e => {
     console.error("Shaka error:", e.detail);
   });
 
-  /* ===== CLEARKEY ===== */
-  if (keys) {
-    // hỗ trợ nhiều key: kid1:key1,kid2:key2
-    const clearKeys = {};
-    keys.split(",").forEach(pair => {
-      const [kid, key] = pair.split(":");
-      if (kid && key) {
-        clearKeys[kid] = key;
-      }
-    });
-
-    player.configure({
-      drm: { clearKeys }
-    });
-  }
-
-  try {
-    await player.load(videoUrl);
-    console.log("Đang phát:", videoUrl);
-  } catch (e) {
-    console.error("Load lỗi:", e);
-    alert("Không phát được stream");
-  }
-}
-
-document.addEventListener("DOMContentLoaded", init);
+  /* ===== FIX CHÍNH Ở ĐÂY =====
+     Chỉ load khi user bấm PLAY */
+  let loaded = false;
+  video.addEventListener("play", async () => {
+    if (loaded) return;
+    loaded = true;
+    try {
+      await player.load(videoUrl);
+      console.log("Loaded after user gesture");
+    } catch (e) {
+      console.error("Load error:", e);
+      alert("Không phát được stream");
+    }
+  }, { once: true });
+});
 </script>
 
 </body>
