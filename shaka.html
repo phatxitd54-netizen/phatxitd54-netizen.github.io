@@ -38,8 +38,8 @@
 function getQueryParams() {
   const params = new URLSearchParams(window.location.search);
   return {
-    videoUrl: params.get("https://livevlisctcdnw.seenow.vn/livesnv2/THETHAO_HD/manifest.mpd"),
-    keys: params.get("dcda1c0511c347f8b89c1821600426ac:dbc1d4d9244f8e7d01d999d4d9f53855")
+    videoUrl: params.get("videoUrl"),
+    keys: params.get("keys")
   };
 }
 
@@ -66,7 +66,7 @@ async function init() {
     if (Object.keys(drmConfig).length > 0) {
       config = {
         drm: {
-          clearKeys: dcda1c0511c347f8b89c1821600426ac:dbc1d4d9244f8e7d01d999d4d9f53855
+          clearKeys: drmConfig
         }
       };
     }
