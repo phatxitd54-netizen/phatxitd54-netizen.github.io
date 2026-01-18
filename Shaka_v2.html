@@ -1,87 +1,86 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Shaka Player v2 (Fixed)</title>
+  <meta charset="UTF-8"/>
+  <meta name="referrer" content="no-referrer"/>
+  <title>Shaka v2 Simple Player</title>
 
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css"/>
+  <!-- Shaka compiled -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
 
   <style>
-    body { margin: 0; background: #000; }
-    .shaka-video-container { width: 100%; height: 100vh; }
-    video { width: 100%; height: 100%; background: #000; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      background: black;
+      object-fit: contain;
+    }
   </style>
 </head>
 <body>
 
-<div class="shaka-video-container" data-shaka-player-container>
-  <!-- ❌ KHÔNG autoplay -->
-  <video playsinline data-shaka-player></video>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js"></script>
+<video id="video" autoplay playsinline></video>
 
 <script>
-function getParams() {
-  const p = new URLSearchParams(location.search);
+function getQueryParams() {
+  const params = new URLSearchParams(window.location.search);
   return {
-    videoUrl: p.get("videoUrl"),
-    keys: p.get("keys")
+    videoUrl: params.get('videoUrl'),
+    keys: params.get('keys')
   };
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { videoUrl, keys } = getParams();
-  if (!videoUrl) return alert("Thiếu videoUrl");
+async function initPlayer() {
+  const { videoUrl, keys } = getQueryParams();
 
-  const video = document.querySelector("video");
-  const player = new shaka.Player(video);
-
-  /* ===== UI ===== */
-  const ui = video.ui;
-  ui.configure({
-    controlPanelElements: [
-      "play_pause",
-      "time_and_duration",
-      "mute",
-      "volume",
-      "spacer",
-      "quality",
-      "fullscreen"
-    ]
-  });
-
-  /* ===== DRM ===== */
-  if (keys) {
-    const clearKeys = {};
-    keys.split(",").forEach(k => {
-      const [kid, key] = k.split(":");
-      if (kid && key) clearKeys[kid] = key;
-    });
-    player.configure({ drm: { clearKeys } });
+  if (!videoUrl) {
+    console.error("Thiếu videoUrl");
+    return;
   }
 
-  player.addEventListener("error", e => {
-    console.error("Shaka error:", e.detail);
+  if (!shaka.Player.isBrowserSupported()) {
+    console.error("Browser không hỗ trợ Shaka");
+    return;
+  }
+
+  const video = document.getElementById('video');
+  const player = new shaka.Player(video);
+
+  /* ===== CLEARKEY ===== */
+  if (keys) {
+    const clearKeys = {};
+    keys.split(',').forEach(item => {
+      const [kid, key] = item.split(':');
+      if (kid && key) clearKeys[kid] = key;
+    });
+
+    player.configure({
+      drm: { clearKeys }
+    });
+  }
+
+  /* Error log */
+  player.addEventListener('error', e => {
+    console.error('Shaka error:', e.detail);
   });
 
-  /* ===== FIX CHÍNH Ở ĐÂY =====
-     Chỉ load khi user bấm PLAY */
-  let loaded = false;
-  video.addEventListener("play", async () => {
-    if (loaded) return;
-    loaded = true;
-    try {
-      await player.load(videoUrl);
-      console.log("Loaded after user gesture");
-    } catch (e) {
-      console.error("Load error:", e);
-      alert("Không phát được stream");
-    }
-  }, { once: true });
-});
+  try {
+    await player.load(videoUrl);
+    console.log("Đang phát:", videoUrl);
+  } catch (e) {
+    console.error("Load thất bại:", e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initPlayer);
 </script>
 
 </body>
