@@ -19,3 +19,5 @@
 3. [Clappr](https://phatxitd54-netizen.github.io/Clappr_IPTVPlayer.html "Clappr")
 # Đặc biệt là đang thử nghiệm 1 thứ mà...
 1. [MPD](https://phatxitd54-netizen.github.io/Shaka.html "MPD")
+2. [Test](https://phatxitd54-netizen.github.io
+/Shaka_v2.html "Test")
