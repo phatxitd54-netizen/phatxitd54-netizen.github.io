@@ -53,64 +53,6 @@ if (isset($_GET['watch'])) {
 
     $channel = $channels[$id];
     ?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title><?= htmlspecialchars($channel['name']) ?></title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
-</head>
-<body style="background:#000;color:white;font-family:Arial">
-
-<h2><?= htmlspecialchars($channel['name']) ?></h2>
-<video id="player" controls autoplay width="100%"></video>
-
-<script>
-let url = "?proxy=<?= urlencode($channel['url']) ?>";
-let video = document.getElementById("player");
-
-if (url.includes(".m3u8")) {
-    if (Hls.isSupported()) {
-        let hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-    } else {
-        video.src = url;
-    }
-} else if (url.includes(".mpd")) {
-    let player = dashjs.MediaPlayer().create();
-    player.initialize(video, url, true);
-} else {
-    video.src = url;
-}
-</script>
-
-<p><a href="./" style="color:white">Back</a></p>
-</body>
-</html>
-<?php
-    exit;
-}
-
-// ===== HOME MODE =====
-?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>TV Online</title>
-<style>
-body{background:#111;color:white;font-family:Arial}
-.channel{display:flex;align-items:center;padding:10px;border-bottom:1px solid #333}
-.channel img{height:40px;margin-right:10px}
-a{color:white;text-decoration:none}
-</style>
-</head>
-<body>
-
-<h2>TV Online</h2>
-
 <?php foreach($channels as $i => $c): ?>
     <a href="?watch=<?= $i ?>">
         <div class="channel">
