@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="referrer" content="no-referrer"/>
-  <title>Shaka v2 Simple Player</title>
+  <title>Shaka v2 No UI</title>
 
   <!-- Shaka compiled -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
@@ -27,7 +27,7 @@
 </head>
 <body>
 
-<video id="video" autoplay playsinline></video>
+<video id="video" autoplay muted playsinline></video>
 
 <script>
 function getQueryParams() {
@@ -54,6 +54,12 @@ async function initPlayer() {
   const video = document.getElementById('video');
   const player = new shaka.Player(video);
 
+  // Tắt toàn bộ UI (nếu có load UI ngoài)
+  if (player.getControls) {
+    const controls = player.getControls();
+    if (controls) controls.destroy();
+  }
+
   /* ===== CLEARKEY ===== */
   if (keys) {
     const clearKeys = {};
@@ -75,13 +81,24 @@ async function initPlayer() {
   try {
     await player.load(videoUrl);
     console.log("Đang phát:", videoUrl);
+    video.play();
   } catch (e) {
     console.error("Load thất bại:", e);
   }
 }
 
+// Click để bật tiếng (do policy trình duyệt)
+document.addEventListener('click', () => {
+  const v = document.getElementById('video');
+  if (v.muted) {
+    v.muted = false;
+    v.volume = 1;
+  }
+});
+
 document.addEventListener('DOMContentLoaded', initPlayer);
 </script>
 
 </body>
-</html>
+  </html>
+  
