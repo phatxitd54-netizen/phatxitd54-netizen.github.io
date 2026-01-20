@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TS Player</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+
+<video id="video" autoplay playsinline muted></video>
+
+<script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.min.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const videoUrl = params.get("videoUrl");
+
+  if (!videoUrl) {
+    alert("Thiếu videoUrl!");
+  } else {
+    if (mpegts.getFeatureList().mseLivePlayback) {
+      const video = document.getElementById("video");
+
+      const player = mpegts.createPlayer({
+        type: "mpegts",
+        isLive: true,
+        url: videoUrl
+      });
+
+      player.attachMediaElement(video);
+      player.load();
+      player.play();
+
+      // Auto resume khi bị pause
+      video.addEventListener("pause", () => {
+        video.play();
+      });
+
+      // Retry nếu lỗi
+      player.on(mpegts.Events.ERROR, () => {
+        console.log("Retry...");
+        player.unload();
+        player.load();
+        player.play();
+      });
+
+    } else {
+      alert("WebView của bạn không hỗ trợ MSE.");
+    }
+  }
+</script>
+
+</body>
+  </html>
+  
