@@ -6,7 +6,7 @@
 ## IPTV tạo bởi PhatxitChim
 
   1. [List chính](https://phatxitd54-netizen.github.io/Anbatukumempire.m3u "Anbatukumempire")
-  2. [List UDP FPT](https://phatxitd54-netizen.github.io/fptudp.m3u "UDP FPT")
+  2. [List UDP FPT](https://download.truongquocvi.com/fpt.php "UDP FPT")
   3. [List RTP MYTV](https://phatxitd54-netizen.github.io/mytvrtp.m3u "RTP MYTV")
 
 ## IPTV tổng hợp từ nhiều nguồn
