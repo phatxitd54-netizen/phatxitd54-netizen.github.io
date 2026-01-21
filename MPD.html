@@ -6,13 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Shaka CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css">
 
   <!-- Video.js CSS (2 CDN như bạn yêu cầu) -->
+  <link href="https://unpkg.com/video.js/dist/video-js.min.css" rel="stylesheet">
   <link href="//vjs.zencdn.net/8.23.6/video-js.min.css" rel="stylesheet">
 
   <!-- Libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
+  <script src="//vjs.zencdn.net/8.23.6/video.min.js"></script>
 
   <style>
     body{
@@ -109,7 +111,7 @@
       class="video-js vjs-default-skin"
       controls
       preload="auto"
-      poster="https://vjs.zencdn.net/v/oceans.png"
+      poster="//vjs.zencdn.net/v/oceans.png"
       data-setup='{}'>
     </video>
     <div id="now-playing">Chưa phát kênh nào</div>
