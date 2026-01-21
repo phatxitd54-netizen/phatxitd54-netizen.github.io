@@ -1,109 +1,102 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <head>
   <meta charset="utf-8">
   <title>Shaka Player - Danh sách kênh (KODIPROP)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Shaka CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css">
 
-  <!-- Plyr CSS (dán thêm dòng này) -->
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+  <!-- VideoJS CSS (theo yêu cầu) -->
+  <link href="https://unpkg.com/video.js/dist/video-js.min.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js"></script>
 
   <style>
-    /* CSS hiện tại của bạn ở đây */
+    body{
+      margin:0;
+      font-family:Arial;
+      background:#111;
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      height:100vh;
+    }
+
+    header{
+      padding:10px;
+      background:#1e1e1e;
+      text-align:center;
+      font-weight:bold;
+    }
+
+    #container{
+      display:flex;
+      flex:1;
+      overflow:hidden;
+    }
+
+    #channel-list{
+      width:220px;
+      background:#1a1a1a;
+      overflow-y:auto;
+    }
+
+    .channel-item{
+      padding:10px;
+      border-bottom:1px solid #333;
+      cursor:pointer;
+    }
+
+    .channel-item:hover{background:#2a2a2a}
+    .channel-item.active{background:#0066cc}
+
+    #player-area{
+      flex:1;
+      background:#000;
+      display:flex;
+      flex-direction:column;
+    }
+
+    video{
+      flex:1;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+
+    #now-playing{
+      padding:8px;
+      background:#1e1e1e;
+      border-top:1px solid #333;
+      font-size:14px;
+    }
+
+    @media (max-width: 768px){
+      #channel-list{display:none;}
+    }
+
+    #toggleListBtn{
+      float:right;
+      background:#0066cc;
+      color:#fff;
+      border:none;
+      border-radius:4px;
+      padding:6px 10px;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    #toggleListBtn:hover{
+      background:#0080ff;
+    }
   </style>
-</head>
-<meta charset="UTF-8">
-<title>Shaka Player - KODIPROP</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js"></script>
-
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#111;
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  height:100vh;
-}
-
-header{
-  padding:10px;
-  background:#1e1e1e;
-  text-align:center;
-  font-weight:bold;
-}
-
-#container{
-  display:flex;
-  flex:1;
-  overflow:hidden;
-}
-
-#channel-list{
-  width:220px;
-  background:#1a1a1a;
-  overflow-y:auto;
-}
-
-.channel-item{
-  padding:10px;
-  border-bottom:1px solid #333;
-  cursor:pointer;
-}
-
-.channel-item:hover{background:#2a2a2a}
-.channel-item.active{background:#0066cc}
-
-#player-area{
-  flex:1;
-  background:#000;
-  display:flex;
-  flex-direction:column;
-}
-
-video{
-  flex:1;
-  width:100%;
-  height:100%;
-  object-fit:contain; /* đổi thành cover nếu muốn full kín */
-}
-
-#now-playing{
-  padding:8px;
-  background:#1e1e1e;
-  border-top:1px solid #333;
-  font-size:14px;
-}
-@media (max-width: 768px){
-  #channel-list{display:none;}
-}
-#toggleListBtn{
-  float:right;
-  background:#0066cc;
-  color:#fff;
-  border:none;
-  border-radius:4px;
-  padding:6px 10px;
-  font-size:16px;
-  cursor:pointer;
-}
-
-#toggleListBtn:hover{
-  background:#0080ff;
-}
-</style>
 </head>
 
 <body>
-<<header>
+<header>
   Shaka Player - Danh sách kênh (KODIPROP)
   <button id="toggleListBtn">☰</button>
 </header>
@@ -119,6 +112,7 @@ video{
 <script>
 var CHANNEL_LIST_URL = 'https://raw.githubusercontent.com/HAO1801/HAO/refs/heads/main/4';
 var player = null;
+
 const toggleBtn = document.getElementById('toggleListBtn');
 const channelList = document.getElementById('channel-list');
 
@@ -149,7 +143,6 @@ function loadChannelList(){
   var listContainer = document.getElementById('channel-list');
   listContainer.textContent = 'Đang tải danh sách kênh...';
 
-  // Cache fallback
   var cached = localStorage.getItem('channel_cache');
   if(cached){
     try{
@@ -158,13 +151,13 @@ function loadChannelList(){
   }
 
   fetch(CHANNEL_LIST_URL)
-    .then(function(res){ return res.text(); })
-    .then(function(text){
+    .then(res => res.text())
+    .then(text => {
       var channels = parseKODIM3U(text);
       renderChannels(channels);
       localStorage.setItem('channel_cache', JSON.stringify(channels));
     })
-    .catch(function(err){
+    .catch(err => {
       console.error(err);
       if(!cached){
         listContainer.innerHTML =
@@ -177,87 +170,103 @@ function loadChannelList(){
     });
 }
 
+// Base64 / Base64URL -> hex
+function b64ToHex(b64){
+  b64 = b64.replace(/-/g, '+').replace(/_/g, '/');
+  var raw = atob(b64);
+  var result = '';
+  for(var i=0;i<raw.length;i++){
+    var hex = raw.charCodeAt(i).toString(16);
+    result += ('00' + hex).slice(-2);
+  }
+  return result;
+}
+
 function renderChannels(channels){
   var listContainer = document.getElementById('channel-list');
   listContainer.innerHTML = '';
 
-  for(var i=0;i<channels.length;i++){
-    (function(ch){
-      var div = document.createElement('div');
-      div.className = 'channel-item';
-      div.textContent = ch.name;
-      div.onclick = function(){ selectChannel(ch, div); };
-      listContainer.appendChild(div);
-    })(channels[i]);
-  }
+  channels.forEach(ch => {
+    var div = document.createElement('div');
+    div.className = 'channel-item';
+    div.textContent = ch.name;
+    div.onclick = () => selectChannel(ch, div);
+    listContainer.appendChild(div);
+  });
 }
 
 function parseKODIM3U(text){
   var lines = text.split('\n');
   var channels = [];
-  var current = { name:'', url:'', kid:null, key:null, licenseType:null };
+  var current = {
+    name:'', url:'',
+    licenseType:null,
+    clearKeys:null
+  };
 
   for(var i=0;i<lines.length;i++){
     var line = lines[i].trim();
     if(!line) continue;
 
-    if(line.indexOf('#EXTINF') === 0){
+    if(line.startsWith('#EXTINF')){
       var idx = line.lastIndexOf(',');
       current = {
         name: idx>-1 ? line.substring(idx+1).trim() : 'Kênh không tên',
         url:'',
-        kid:null,
-        key:null,
-        licenseType:null
+        licenseType:null,
+        clearKeys:null
       };
     }
-    else if(line.indexOf('#KODIPROP') === 0){
+    else if(line.startsWith('#KODIPROP')){
       var kv = line.split('=');
-      if(kv.length<2) continue;
+      if(kv.length < 2) continue;
+
       var keyName = kv[0].replace('#KODIPROP:','').trim();
       var value = kv.slice(1).join('=').trim();
 
       if(keyName === 'inputstream.adaptive.license_type'){
         current.licenseType = value.toLowerCase();
       }
+
       if(keyName === 'inputstream.adaptive.license_key'){
-        var parts = value.split(':');
-        if(parts.length===2){
-          current.kid = parts[0];
-          current.key = parts[1];
+        try{
+          var json = JSON.parse(value);
+          if(json.keys && json.keys.length){
+            current.clearKeys = {};
+            json.keys.forEach(k => {
+              var kidHex = b64ToHex(k.kid);
+              var keyHex = b64ToHex(k.k);
+              current.clearKeys[kidHex] = keyHex;
+            });
+          }
+        }catch(e){
+          console.warn('Không parse được license_key JSON', e);
         }
       }
     }
     else if(line.charAt(0) !== '#'){
       current.url = line;
-      channels.push({
-        name: current.name,
-        url: current.url,
-        kid: current.kid,
-        key: current.key,
-        licenseType: current.licenseType
-      });
-      current = { name:'', url:'', kid:null, key:null, licenseType:null };
+      channels.push(current);
+      current = { name:'', url:'', licenseType:null, clearKeys:null };
     }
   }
+
   return channels;
 }
 
 function selectChannel(channel, element){
-  var items = document.querySelectorAll('.channel-item');
-  for(var i=0;i<items.length;i++){
-    items[i].classList.remove('active');
-  }
+  document.querySelectorAll('.channel-item')
+    .forEach(el => el.classList.remove('active'));
+
   element.classList.add('active');
-  document.getElementById('now-playing').textContent = 'Đang phát: ' + channel.name;
+  document.getElementById('now-playing').textContent =
+    'Đang phát: ' + channel.name;
 
   try{
     player.configure({ drm:{ clearKeys:{} } });
 
-    if(channel.licenseType === 'clearkey' && channel.kid && channel.key){
-      var ck = {};
-      ck[channel.kid] = channel.key;
-      player.configure({ drm:{ clearKeys: ck } });
+    if(channel.licenseType === 'clearkey' && channel.clearKeys){
+      player.configure({ drm:{ clearKeys: channel.clearKeys } });
     }
 
     player.load(channel.url);
@@ -267,6 +276,7 @@ function selectChannel(channel, element){
 }
 
 function onErrorEvent(event){ onError(event.detail); }
+
 function onError(error){
   console.error('Shaka Error', error);
   alert('Lỗi phát kênh: ' + (error.message || error));
