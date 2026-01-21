@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Shaka Player - Danh sách kênh (KODIPROP)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- Shaka Player Scripts & CSS -->  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js"></script>
+  <link rel="preload" as="script" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.ui.min.js">  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#111; color:#fff; display:flex; flex-direction:column; height:100vh; }
+    header { padding:10px 15px; background:#1e1e1e; font-size:18px; font-weight:bold; text-align:center; }
+    #container { display:flex; flex:1; overflow:hidden; }
+    #channel-list { width:260px; background:#1a1a1a; overflow-y:auto; border-right:1px solid #333; }
+    .channel-item { padding:10px 12px; cursor:pointer; border-bottom:1px solid #2a2a2a; transition:background 0.2s; }
+    .channel-item:hover { background:#2a2a2a; }
+    .channel-item.active { background:#0066cc; }
+    #player-area { flex:1; display:flex; flex-direction:column; background:#000; }
+    video { width:100%; height:100%; background:#000; }
+    #now-playing { padding:8px 12px; background:#1e1e1e; font-size:14px; border-top:1px solid #333; }
+    @media (max-width:768px){ #channel-list{ width:180px; } }
+  </style></head>
+<body>
+  <header>Shaka Player - Danh sách kênh (KODIPROP)</header>  <div id="container">
+    <div id="channel-list">Đang tải danh sách kênh...</div>
+    <div id="player-area">
+      <video id="video" controls autoplay></video>
+      <div id="now-playing">Chưa phát kênh nào</div>
+    </div>
+  </div>  <script>
+    const CHANNEL_LIST_URL = 'https://raw.githubusercontent.com/HAO1801/HAO/refs/heads/main/4';
+    let player, ui;
+
+    async function initPlayer() {
+      const video = document.getElementById('video');
+      const uiConfig = { controlPanelElements:['play_pause','time_and_duration','spacer','mute','volume','fullscreen'] };
+      ui = new shaka.ui.Overlay(shaka.Player, video, document.getElementById('player-area'));
+      ui.configure(uiConfig);
+      player = ui.getPlayer();
+      player.addEventListener('error', onErrorEvent);
+      await loadChannelList();
+    }
+
+    async function loadChannelList(){
+      const listContainer = document.getElementById('channel-list');
+      listContainer.textContent = 'Đang tải danh sách kênh...';
+      try{
+        const res = await fetch(CHANNEL_LIST_URL);
+        const text = await res.text();
+        const channels = parseKODIM3U(text);
+        if(!channels.length){ listContainer.textContent='Không có kênh nào.'; return; }
+        listContainer.innerHTML='';
+        channels.forEach((ch)=>{
+          const div=document.createElement('div');
+          div.className='channel-item';
+          div.textContent=ch.name;
+          div.addEventListener('click',()=>selectChannel(ch,div));
+          listContainer.appendChild(div);
+        });
+      }catch(e){ console.error(e); listContainer.textContent='Lỗi tải danh sách kênh.'; }
+    }
+
+    function parseKODIM3U(text){
+      const lines=text.split(/
+?
+/);
+      const channels=[];
+      let current={ name:'', url:'', kid:null, key:null, licenseType:null };
+
+      for(let line of lines){
+        line=line.trim();
+        if(!line) continue;
+
+        if(line.startsWith('#EXTINF')){
+          const m=line.match(/,(.*)$/);
+          current={ name: m? m[1].trim():'Kênh không tên', url:'', kid:null, key:null, licenseType:null };
+        }
+        else if(line.startsWith('#KODIPROP')){
+          const kv=line.split('=');
+          if(kv.length<2) continue;
+          const keyName=kv[0].replace('#KODIPROP:','').trim();
+          const value=kv.slice(1).join('=').trim();
+
+          if(keyName==='inputstream.adaptive.license_type'){
+            current.licenseType=value.toLowerCase();
+          }
+          if(keyName==='inputstream.adaptive.license_key'){
+            if(value.includes(':')){
+              const [kid,key]=value.split(':');
+              current.kid=kid.trim();
+              current.key=key.trim();
+            }
+          }
+        }
+        else if(!line.startsWith('#')){
+          current.url=line;
+          channels.push({ ...current });
+          current={ name:'', url:'', kid:null, key:null, licenseType:null };
+        }
+      }
+      return channels;
+    }
+
+    async function selectChannel(channel, element){
+      document.querySelectorAll('.channel-item').forEach(i=>i.classList.remove('active'));
+      element.classList.add('active');
+      document.getElementById('now-playing').textContent = `Đang phát: ${channel.name}`;
+
+      try{
+        player.configure({ drm:{ clearKeys:{} } });
+
+        if(channel.licenseType==='clearkey' && channel.kid && channel.key){
+          const ck={}; ck[channel.kid]=channel.key;
+          player.configure({ drm:{ clearKeys: ck } });
+        }
+
+        await player.load(channel.url);
+      }catch(e){ onError(e); }
+    }(channel, element){
+      document.querySelectorAll('.channel-item').forEach(i=>i.classList.remove('active'));
+      element.classList.add('active');
+      document.getElementById('now-playing').textContent = `Đang phát: ${channel.name}`;
+
+      try{
+        player.configure({ drm:{ clearKeys:{} } });
+        if(channel.kid && channel.key){
+          const ck={}; ck[channel.kid]=channel.key;
+          player.configure({ drm:{ clearKeys: ck } });
+        }
+        await player.load(channel.url);
+      }catch(e){ onError(e); }
+    }
+
+    function onErrorEvent(event){ onError(event.detail); }
+    function onError(error){ console.error('Shaka Error', error); alert('Lỗi phát kênh: ' + error.message); }
+
+    document.addEventListener('DOMContentLoaded', initPlayer);
+  </script></body>
+</html>
