@@ -1,155 +1,172 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <title>Shaka + Video.js - KODIPROP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<title>Shaka + Plyr - KODIPROP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    
+<!-- Shaka CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css">
 
-  <!-- Shaka CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/controls.min.css">
+<!-- Plyr CSS -->
+<link rel="stylesheet" href="https://cdn.plyr.io/3.8.4/plyr.css" />
 
-  <!-- Video.js CSS (2 CDN như bạn yêu cầu) -->
-  <link href="https://unpkg.com/video.js/dist/video-js.min.css" rel="stylesheet">
-  <link href="//vjs.zencdn.net/8.23.6/video-js.min.css" rel="stylesheet">
+<!-- Shaka -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
 
-  <!-- Libs -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
-  <script src="//vjs.zencdn.net/8.23.6/video.min.js"></script>
+<!-- Plyr -->
+<script src="https://cdn.plyr.io/3.8.4/plyr.polyfilled.js"></script>
 
-  <style>
-    body{
-      margin:0;
-      font-family:Arial;
-      background:#111;
-      color:#fff;
-      display:flex;
-      flex-direction:column;
-      height:100vh;
-    }
+<style>
+:root{
+  --plyr-color-main:#1ac266;
+}
 
-    header{
-      padding:10px;
-      background:#1e1e1e;
-      text-align:center;
-      font-weight:bold;
-    }
+body{
+  margin:0;
+  font-family: "Google Sans", "Inter", system-ui, sans-serif;
+  background:#111;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
 
-    #container{
-      display:flex;
-      flex:1;
-      overflow:hidden;
-    }
+header{
+  padding:10px;
+  background:#1e1e1e;
+  text-align:center;
+  font-weight:bold;
+}
 
-    #channel-list{
-      width:220px;
-      background:#1a1a1a;
-      overflow-y:auto;
-    }
+#container{
+  display:flex;
+  flex:1;
+  overflow:hidden;
+}
 
-    .channel-item{
-      padding:10px;
-      border-bottom:1px solid #333;
-      cursor:pointer;
-    }
+#channel-list{
+  width:220px;
+  background:#1a1a1a;
+  overflow-y:auto;
+}
 
-    .channel-item:hover{background:#2a2a2a}
-    .channel-item.active{background:#0066cc}
+.channel-item{
+  padding:10px;
+  border-bottom:1px solid #333;
+  cursor:pointer;
+}
+.channel-item:hover{background:#2a2a2a}
+.channel-item.active{background:#0066cc}
 
-    #player-area{
-      flex:1;
-      background:#000;
-      display:flex;
-      flex-direction:column;
-    }
+#player-area{
+  flex:1;
+  background:#000;
+  display:flex;
+  flex-direction:column;
+}
 
-    video{
-      flex:1;
-      width:100%;
-      height:100%;
-      object-fit:contain;
-    }
+video{
+  width:100%;
+  height:100%;
+  background:#000;
+}
 
-    #now-playing{
-      padding:8px;
-      background:#1e1e1e;
-      border-top:1px solid #333;
-      font-size:14px;
-    }
+#now-playing{
+  padding:8px;
+  background:#1e1e1e;
+  border-top:1px solid #333;
+  font-size:14px;
+}
 
-    @media (max-width: 768px){
-      #channel-list{display:none;}
-    }
+#toggleListBtn{
+  float:right;
+  background:#0066cc;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  padding:6px 10px;
+  font-size:16px;
+  cursor:pointer;
+}
 
-    #toggleListBtn{
-      float:right;
-      background:#0066cc;
-      color:#fff;
-      border:none;
-      border-radius:4px;
-      padding:6px 10px;
-      font-size:16px;
-      cursor:pointer;
-    }
-
-    #toggleListBtn:hover{
-      background:#0080ff;
-    }
-  </style>
+@media (max-width:768px){
+  #channel-list{display:none;}
+}
+/* Google Sans */
+.google-sans {
+  font-family: "Google Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings: "GRAD" 0;
+}
+</style>
 </head>
 
 <body>
 <header>
-  Shaka + Video.js - Danh sách kênh (KODIPROP)
+  Shaka + Plyr – Danh sách kênh
   <button id="toggleListBtn">☰</button>
 </header>
 
 <div id="container">
   <div id="channel-list">Đang tải danh sách kênh...</div>
+
   <div id="player-area">
-    <video
-      id="my-player"
-      class="video-js vjs-default-skin"
-      controls
-      preload="auto"
-      poster="//vjs.zencdn.net/v/oceans.png"
-      data-setup='{}'>
-    </video>
+    <video id="video" class="player" playsinline controls></video>
     <div id="now-playing">Chưa phát kênh nào</div>
   </div>
 </div>
 
 <script>
-var CHANNEL_LIST_URL = 'https://raw.githubusercontent.com/HAO1801/HAO/refs/heads/main/4';
+const CHANNEL_LIST_URL =
+'https://raw.githubusercontent.com/HAO1801/HAO/refs/heads/main/4';
 
-var shakaPlayer = null;
-var vjsPlayer = null;
+let shakaPlayer;
+let plyr;
 
 const toggleBtn = document.getElementById('toggleListBtn');
 const channelList = document.getElementById('channel-list');
 
-toggleBtn.addEventListener('click', function(){
-  if(channelList.style.display === 'none'){
-    channelList.style.display = 'block';
-    toggleBtn.textContent = '☰';
-  }else{
-    channelList.style.display = 'none';
-    toggleBtn.textContent = '📺';
-  }
-});
+toggleBtn.onclick = () => {
+  channelList.style.display =
+    channelList.style.display === 'none' ? 'block' : 'none';
+};
 
-function isHex(str){
-  return /^[0-9a-fA-F]+$/.test(str);
+function isHex(s){
+  return /^[0-9a-fA-F]+$/.test(s);
 }
 
 function b64ToHex(b64){
-  b64 = b64.replace(/-/g, '+').replace(/_/g, '/');
-  var raw = atob(b64);
-  var result = '';
-  for(var i=0;i<raw.length;i++){
-    var hex = raw.charCodeAt(i).toString(16);
-    result += ('00' + hex).slice(-2);
+  b64 = b64.replace(/-/g,'+').replace(/_/g,'/');
+  while (b64.length % 4) b64 += '=';
+  const raw = atob(b64);
+  let hex='';
+  for(let i=0;i<raw.length;i++){
+    hex += ('0'+raw.charCodeAt(i).toString(16)).slice(-2);
   }
-  return result;
+  return hex;
+}
+function parseClearKeyJSON(jsonText, cur){
+  try {
+    const data = JSON.parse(jsonText);
+    if (Array.isArray(data.keys)) {
+      data.keys.forEach(k=>{
+        const kidHex = isHex(k.kid) ? k.kid : b64ToHex(k.kid);
+        const keyHex = isHex(k.k)   ? k.k   : b64ToHex(k.k);
+        cur.clearKeys[kidHex] = keyHex;
+
+        console.log('🔐 ClearKey JSON:', kidHex, keyHex);
+      });
+    }
+  } catch(e){
+    console.warn('❌ Lỗi parse JSON ClearKey', e);
+  }
 }
 
 function initPlayer(){
@@ -158,158 +175,134 @@ function initPlayer(){
     return;
   }
 
-  // Init Video.js
-  vjsPlayer = videojs('my-player', {}, function(){
-    videojs.log('Your player is ready!');
+  const video = document.getElementById('video');
+
+  // Plyr
+  plyr = new Plyr(video,{
+    controls:[
+      'play','progress','current-time','mute','volume',
+      'settings','fullscreen'
+    ]
   });
 
-  // Init Shaka on top of Video.js video element
-  shakaPlayer = new shaka.Player(vjsPlayer.el().getElementsByTagName('video')[0]);
-  shakaPlayer.addEventListener('error', onErrorEvent);
+  // Shaka
+  shakaPlayer = new shaka.Player(video);
+  shakaPlayer.addEventListener('error', e => alert(e.detail.message));
 
   loadChannelList();
 }
 
 function loadChannelList(){
-  var listContainer = document.getElementById('channel-list');
-  listContainer.textContent = 'Đang tải danh sách kênh...';
-
-  var cached = localStorage.getItem('channel_cache');
-  if(cached){
-    try{ renderChannels(JSON.parse(cached)); }catch(e){}
-  }
-
   fetch(CHANNEL_LIST_URL)
-    .then(res => res.text())
-    .then(text => {
-      var channels = parseKODIM3U(text);
-      renderChannels(channels);
-      localStorage.setItem('channel_cache', JSON.stringify(channels));
-    })
-    .catch(err => {
-      console.error(err);
-      if(!cached){
-        listContainer.innerHTML =
-          '<div style="padding:12px;color:#ff8080">' +
-          '❌ Không tải được danh sách kênh<br>' +
-          '👉 GitHub RAW bị chặn trên file://<br>' +
-          '👉 Mở file qua server hoặc app Web Server' +
-          '</div>';
-      }
-    });
+    .then(r=>r.text())
+    .then(t=>renderChannels(parseKODIM3U(t)))
+    .catch(()=>channelList.innerHTML='❌ Không tải được danh sách kênh');
 }
 
 function renderChannels(channels){
-  var listContainer = document.getElementById('channel-list');
-  listContainer.innerHTML = '';
-
-  channels.forEach(ch => {
-    var div = document.createElement('div');
-    div.className = 'channel-item';
-    div.textContent = ch.name;
-    div.onclick = () => selectChannel(ch, div);
-    listContainer.appendChild(div);
+  channelList.innerHTML='';
+  channels.forEach(ch=>{
+    const d=document.createElement('div');
+    d.className='channel-item';
+    d.textContent=ch.name;
+    d.onclick=()=>selectChannel(ch,d);
+    channelList.appendChild(d);
   });
 }
 
 function parseKODIM3U(text){
-  var lines = text.split('\n');
-  var channels = [];
-  var current = { name:'', url:'', licenseType:null, clearKeys:null };
+  const lines = text.split('\n');
+  const channels = [];
+  let cur = null;
+  let collectingJSON = false;
+  let jsonBuffer = '';
 
-  for(var i=0;i<lines.length;i++){
-    var line = lines[i].trim();
-    if(!line) continue;
+  lines.forEach(line=>{
+    let l = line.trim();
+    if(!l) return;
 
-    if(line.startsWith('#EXTINF')){
-      var idx = line.lastIndexOf(',');
-      current = {
-        name: idx>-1 ? line.substring(idx+1).trim() : 'Kênh không tên',
-        url:'',
-        licenseType:null,
-        clearKeys:null
+    // EXTINF
+    if(l.startsWith('#EXTINF')){
+      cur = {
+        name: l.split(',').pop(),
+        url: '',
+        licenseType: null,
+        clearKeys: {}
       };
     }
-    else if(line.startsWith('#KODIPROP')){
-      var kv = line.split('=');
-      if(kv.length < 2) continue;
 
-      var keyName = kv[0].replace('#KODIPROP:','').trim();
-      var value = kv.slice(1).join('=').trim();
+    // KODIPROP
+    else if(l.startsWith('#KODIPROP') && cur){
+      const key = l.split('=')[0];
+      const val = l.includes('=') ? l.split('=').slice(1).join('=').trim() : '';
 
-      if(keyName === 'inputstream.adaptive.license_type'){
-        current.licenseType = value.toLowerCase();
+      if (key.includes('license_type')){
+        cur.licenseType = val.toLowerCase();
       }
 
-      if(keyName === 'inputstream.adaptive.license_key'){
-        current.clearKeys = {};
+      // ===== LICENSE KEY =====
+      if (key.includes('license_key')) {
 
-        // JSON base64
-        if(value.startsWith('{')){
-          try{
-            var json = JSON.parse(value);
-            if(json.keys && json.keys.length){
-              json.keys.forEach(k => {
-                var kidHex = isHex(k.kid) ? k.kid : b64ToHex(k.kid);
-                var keyHex = isHex(k.k) ? k.k : b64ToHex(k.k);
-                current.clearKeys[kidHex] = keyHex;
-              });
-            }
-          }catch(e){
-            console.warn('Không parse được license_key JSON', e);
+        // JSON bắt đầu (có thể xuống dòng)
+        if (val.startsWith('{')) {
+          collectingJSON = true;
+          jsonBuffer = val;
+
+          // JSON gọn 1 dòng
+          if (val.endsWith('}')) {
+            collectingJSON = false;
+            parseClearKeyJSON(jsonBuffer, cur);
+            jsonBuffer = '';
           }
         }
 
-        // kid:key (hex hoặc base64)
-        else if(value.includes(':')){
-          var parts = value.split(':');
-          if(parts.length === 2){
-            var kidHex = isHex(parts[0]) ? parts[0] : b64ToHex(parts[0]);
-            var keyHex = isHex(parts[1]) ? parts[1] : b64ToHex(parts[1]);
-            current.clearKeys[kidHex] = keyHex;
-          }
+        // kid:key (HEX / Base64 / Base64URL)
+        else if (val.includes(':')) {
+          const [kidRaw, keyRaw] = val.split(':');
+          const kidHex = isHex(kidRaw) ? kidRaw : b64ToHex(kidRaw);
+          const keyHex = isHex(keyRaw) ? keyRaw : b64ToHex(keyRaw);
+          cur.clearKeys[kidHex] = keyHex;
+
+          console.log('🔑 ClearKey:', kidHex, keyHex);
         }
       }
     }
-    else if(line.charAt(0) !== '#'){
-      current.url = line;
-      channels.push(current);
-      current = { name:'', url:'', licenseType:null, clearKeys:null };
+
+    // Thu thập JSON nhiều dòng
+    else if (collectingJSON && cur){
+      jsonBuffer += l;
+      if (l.endsWith('}')) {
+        collectingJSON = false;
+        parseClearKeyJSON(jsonBuffer, cur);
+        jsonBuffer = '';
+      }
     }
-  }
+
+    // URL
+    else if (!l.startsWith('#') && cur){
+      cur.url = l;
+      channels.push(cur);
+      cur = null;
+    }
+  });
 
   return channels;
 }
 
-function selectChannel(channel, element){
+function selectChannel(ch,el){
   document.querySelectorAll('.channel-item')
-    .forEach(el => el.classList.remove('active'));
+    .forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
 
-  element.classList.add('active');
-  document.getElementById('now-playing').textContent =
-    'Đang phát: ' + channel.name;
+  document.getElementById('now-playing').textContent='Đang phát: '+ch.name;
 
-  try{
-    shakaPlayer.configure({ drm:{ clearKeys:{} } });
+  shakaPlayer.configure({drm:{clearKeys:{}}});
 
-    if(channel.licenseType === 'clearkey' && channel.clearKeys){
-      shakaPlayer.configure({ drm:{ clearKeys: channel.clearKeys } });
-    }
-
-    shakaPlayer.load(channel.url).then(() => {
-      vjsPlayer.play();
-    });
-
-  }catch(e){
-    onError(e);
+  if(ch.licenseType==='clearkey' && ch.clearKeys){
+    shakaPlayer.configure({drm:{clearKeys:ch.clearKeys}});
   }
-}
 
-function onErrorEvent(event){ onError(event.detail); }
-
-function onError(error){
-  console.error('Shaka Error', error);
-  alert('Lỗi phát kênh: ' + (error.message || error));
+  shakaPlayer.load(ch.url).then(()=>plyr.play());
 }
 
 document.addEventListener('DOMContentLoaded', initPlayer);
