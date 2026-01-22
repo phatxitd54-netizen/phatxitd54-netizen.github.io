@@ -2,67 +2,89 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Shaka Player DASH</title>
+  <title>Shaka Player + Plyr</title>
 
-  <!-- Shaka Player -->
+  <!-- Shaka Player (engine DASH/DRM) -->
   <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.16.14/dist/shaka-player.compiled.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/shaka-player@4.16.14/dist/controls.min.css" rel="stylesheet">
+
+  <!-- Plyr CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.polyfilled.js"></script>
 
   <style>
     body {
-      background: #111;
+      background: #0f0f0f;
       color: #fff;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       padding: 10px;
     }
+
+    h3 {
+      text-align: center;
+    }
+
     input, button {
       width: 100%;
-      margin: 5px 0;
-      padding: 8px;
+      margin: 6px 0;
+      padding: 10px;
       font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
     }
-    #video-container {
-      width: 100%;
-      max-width: 800px;
-      margin: auto;
+
+    button {
+      background: #00b3ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
     }
+
+    #player-wrapper {
+      max-width: 900px;
+      margin: 15px auto;
+    }
+
     video {
       width: 100%;
       height: auto;
-      background: black;
+      background: #000;
     }
   </style>
 </head>
 <body>
 
-<h3>🎥 Shaka DASH Player</h3>
+<h3>🎬 Shaka DASH Player (Plyr UI)</h3>
 
 <input id="mpd" placeholder="Nhập link MPD (.mpd)">
 <input id="key" placeholder="Nhập KID:KEY (vd: kid:key)">
 
-<button onclick="loadVideo()">▶ Phát</button>
+<button onclick="loadVideo()">▶ Phát video</button>
 
-<div id="video-container">
-  <video id="video"></video>
+<div id="player-wrapper">
+  <video id="video" playsinline controls></video>
 </div>
 
 <script>
   const video = document.getElementById("video");
-  const container = document.getElementById("video-container");
 
+  // Cài polyfill cho Shaka
   shaka.polyfill.installAll();
 
   if (!shaka.Player.isBrowserSupported()) {
     alert("Trình duyệt không hỗ trợ Shaka Player!");
   }
 
+  // Khởi tạo Shaka Player
   const player = new shaka.Player(video);
-  const ui = new shaka.ui.Overlay(player, container, video);
 
-  ui.configure({
-    controlPanelElements: [
-      'play_pause',
-      'time_and_duration',
+  // Khởi tạo Plyr UI
+  const plyr = new Plyr(video, {
+    controls: [
+      'play-large',
+      'play',
+      'progress',
+      'current-time',
       'mute',
       'volume',
       'fullscreen'
@@ -78,7 +100,8 @@
       return;
     }
 
-    if (keyInput) {
+    // Cấu hình ClearKey nếu có
+    if (keyInput.includes(":")) {
       const [kid, key] = keyInput.split(":");
 
       player.configure({
@@ -92,14 +115,14 @@
 
     try {
       await player.load(mpd);
-      console.log("Video đã load");
-    } catch (e) {
-      console.error(e);
-      alert("Lỗi load video!");
+      console.log("✅ Video loaded");
+      plyr.play();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Lỗi load video");
     }
   }
 </script>
 
 </body>
-    </html>
-  
+</html>
