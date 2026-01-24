@@ -60,7 +60,12 @@ async function convert() {
       const name = ch.name;
       const logo = ch.logo || "
 
-      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="MyTV",${name}\n`;
+      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="VTV",${name}\n`;
+      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="VTVCab",${name}\n`;
+      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="SCTV",${name}\n`;
+      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="HTV - TP.HCM",${name}\n`;
+      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="THVL",${name}\n`;
+      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="Quốc Tế",${name}\n`;
       m3u += url + "\n";
       count++;
     });
