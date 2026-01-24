@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>MyTV JSON → M3U (No Encode)</title>
+<title> JSON → M3U </title>
 <style>
   body {
     background:#020617;
@@ -31,7 +31,7 @@
 </head>
 <body>
 
-<h2>MyTV JSON → M3U</h2>
+<h2>PhatxitChim - JSON → M3U</h2>
 <button onclick="convert()">Fetch & Convert</button>
 
 <textarea id="out">#EXTM3U</textarea>
@@ -39,13 +39,7 @@
 <script>
 /* ❌ KHÔNG encode URI */
 const API =
-  "https://api.allorigins.win/raw?url=https://apigw.mytv.vn/api/v1/channel?cate_id=undefined&uuid=f720b0ad78a1224b893fdfe3aeeb4b071763206372868&req_id=f720b0ad78a1224b893fdfe3aeeb4b07%7C1763206405313";
-
-// đổi RTP → HTTP proxy
-function convertRTP(url) {
-  if (!url || !url.startsWith("rtp://")) return url;
-  return "http://14.255.66.32:8989/rtp/" + url.replace("rtp://", "");
-}
+  "https://api.allorigins.win/raw?url=https://raw.githubusercontent.com/anbatukumempire-hue/Loc1234/refs/heads/main/app.json
 
 async function convert() {
   const out = document.getElementById("out");
@@ -64,8 +58,7 @@ async function convert() {
       if (!ch.url_b2c || !ch.name) return;
 
       const name = ch.name;
-      const logo = ch.logo || "";
-      const url = convertRTP(ch.url_b2c);
+      const logo = ch.logo || "
 
       m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="MyTV",${name}\n`;
       m3u += url + "\n";
@@ -73,7 +66,7 @@ async function convert() {
     });
 
     out.value = m3u + `\n# Tổng kênh: ${count}`;
-    download(m3u, "mytv.m3u");
+    download(m3u, "vAppTV.m3u");
 
   } catch (e) {
     out.value = "Lỗi: " + e;
