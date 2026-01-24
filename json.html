@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>JSON → M3U (MyTV)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 16px;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #22c55e;
+      border: none;
+      border-radius: 6px;
+      color: #000;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      margin-top: 12px;
+      background: #020617;
+      color: #a7f3d0;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<h2>JSON → M3U (MyTV)</h2>
+<button onclick="convert()">Lấy JSON & tạo M3U</button>
+
+<textarea id="output" placeholder="#EXTM3U"></textarea>
+
+<script>
+const API_URL =
+  "https://api.allorigins.win/raw?url=" +
+  encodeURIComponent(
+    "https://apigw.mytv.vn/api/v1/channel?cate_id=undefined&uuid=f720b0ad78a1224b893fdfe3aeeb4b071763206372868&req_id=f720b0ad78a1224b893fdfe3aeeb4b07%7C1763206405313"
+  );
+
+async function convert() {
+  const out = document.getElementById("output");
+  out.value = "Đang tải JSON...\n";
+
+  try {
+    const res = await fetch(API_URL);
+    const json = await res.json();
+
+    // DEBUG nếu cần
+    console.log(json);
+
+    let m3u = "#EXTM3U\n";
+
+    // 👉 cấu trúc MyTV thường nằm ở json.data
+    const channels = json.data || [];
+
+    channels.forEach(ch => {
+      const name = ch.name || "Unknown";
+      const logo = ch.logo || "";
+      const group = ch.category_name || "MyTV";
+
+      // stream url (thường là m3u8)
+      const url =
+        ch.play_url ||
+        ch.stream_url ||
+        (ch.streams && ch.streams[0]?.url);
+
+      if (!url) return;
+
+      m3u += `#EXTINF:-1 tvg-name="${name}" tvg-logo="${logo}" group-title="${group}",${name}\n`;
+      m3u += `${url}\n`;
+    });
+
+    out.value = m3u;
+
+    download(m3u, "mytv.m3u");
+
+  } catch (e) {
+    out.value = "Lỗi: " + e;
+  }
+}
+
+function download(text, filename) {
+  const blob = new Blob([text], { type: "audio/x-mpegurl" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+</script>
+
+</body>
+</html>
