@@ -1,85 +1,78 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>JSON → M3U (MyTV)</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 16px;
-      background: #0f172a;
-      color: #e5e7eb;
-    }
-    button {
-      padding: 10px 16px;
-      font-size: 16px;
-      cursor: pointer;
-      background: #22c55e;
-      border: none;
-      border-radius: 6px;
-      color: #000;
-    }
-    textarea {
-      width: 100%;
-      height: 300px;
-      margin-top: 12px;
-      background: #020617;
-      color: #a7f3d0;
-      border-radius: 6px;
-      padding: 10px;
-      font-family: monospace;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>MyTV JSON → M3U (No Encode)</title>
+<style>
+  body {
+    background:#020617;
+    color:#e5e7eb;
+    font-family: monospace;
+    padding:16px;
+  }
+  button {
+    background:#22c55e;
+    border:none;
+    padding:10px 16px;
+    font-size:16px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  textarea {
+    width:100%;
+    height:320px;
+    margin-top:10px;
+    background:#020617;
+    color:#86efac;
+    padding:10px;
+    border-radius:6px;
+  }
+</style>
 </head>
 <body>
 
-<h2>JSON → M3U (MyTV)</h2>
-<button onclick="convert()">Lấy JSON & tạo M3U</button>
+<h2>MyTV JSON → M3U</h2>
+<button onclick="convert()">Fetch & Convert</button>
 
-<textarea id="output" placeholder="#EXTM3U"></textarea>
+<textarea id="out">#EXTM3U</textarea>
 
 <script>
-const API_URL =
-  "https://api.allorigins.win/raw?url=" +
-  encodeURIComponent(
-    "https://apigw.mytv.vn/api/v1/channel?cate_id=undefined&uuid=f720b0ad78a1224b893fdfe3aeeb4b071763206372868&req_id=f720b0ad78a1224b893fdfe3aeeb4b07%7C1763206405313"
-  );
+/* ❌ KHÔNG encode URI */
+const API =
+  "https://api.allorigins.win/raw?url=https://apigw.mytv.vn/api/v1/channel?cate_id=undefined&uuid=f720b0ad78a1224b893fdfe3aeeb4b071763206372868&req_id=f720b0ad78a1224b893fdfe3aeeb4b07%7C1763206405313";
+
+// đổi RTP → HTTP proxy
+function convertRTP(url) {
+  if (!url || !url.startsWith("rtp://")) return url;
+  return "http://14.255.66.32:8989/rtp/" + url.replace("rtp://", "");
+}
 
 async function convert() {
-  const out = document.getElementById("output");
+  const out = document.getElementById("out");
   out.value = "Đang tải JSON...\n";
 
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(API);
     const json = await res.json();
 
-    // DEBUG nếu cần
-    console.log(json);
-
     let m3u = "#EXTM3U\n";
+    let count = 0;
 
-    // 👉 cấu trúc MyTV thường nằm ở json.data
-    const channels = json.data || [];
+    const list = json.data || [];
 
-    channels.forEach(ch => {
-      const name = ch.name || "Unknown";
+    list.forEach(ch => {
+      if (!ch.url_b2c || !ch.name) return;
+
+      const name = ch.name;
       const logo = ch.logo || "";
-      const group = ch.category_name || "MyTV";
+      const url = convertRTP(ch.url_b2c);
 
-      // stream url (thường là m3u8)
-      const url =
-        ch.play_url ||
-        ch.stream_url ||
-        (ch.streams && ch.streams[0]?.url);
-
-      if (!url) return;
-
-      m3u += `#EXTINF:-1 tvg-name="${name}" tvg-logo="${logo}" group-title="${group}",${name}\n`;
-      m3u += `${url}\n`;
+      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="MyTV",${name}\n`;
+      m3u += url + "\n";
+      count++;
     });
 
-    out.value = m3u;
-
+    out.value = m3u + `\n# Tổng kênh: ${count}`;
     download(m3u, "mytv.m3u");
 
   } catch (e) {
