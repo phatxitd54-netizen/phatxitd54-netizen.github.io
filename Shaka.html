@@ -2,7 +2,10 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Shaka ClearKey Neon Player</title>
+<title>PhatXitDuc - Shaka Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
 <!-- Shaka -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.3/shaka-player.compiled.js"></script>
@@ -22,10 +25,11 @@
 body {
   background: radial-gradient(circle at top, #020617, #000);
   color: #e5e7eb;
-  font-family: system-ui, Arial;
+  font-family: "Montserrat", system-ui, Arial, sans-serif;
   padding: 16px;
   animation: bgFade 1s ease;
 }
+
 
 .box {
   max-width: 900px;
@@ -169,12 +173,19 @@ video.switching {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+.montserrat {
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
 </style>
 </head>
 
 <body>
 <div class="box">
-  <h2>⚡ Shaka ClearKey /<h2>
+<h2 class="montserrat" style="font-weight:700;">PhatXitDuc - MPD</h2>
+
 
   <input id="mpd" placeholder="🔗 Nhập link MPD (.mpd)">
   <input id="kidkey" placeholder="🔑 Nhập kid:key (HEX hoặc Base64URL)">
@@ -251,4 +262,4 @@ async function loadVideo() {
 }
 </script>
 </body>
-</html>
+  </html>
