@@ -2,89 +2,107 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title> JSON → M3U </title>
+<title>M3U → JSON (Group + Download)</title>
 <style>
-  body {
-    background:#020617;
-    color:#e5e7eb;
-    font-family: monospace;
-    padding:16px;
-  }
-  button {
-    background:#22c55e;
-    border:none;
-    padding:10px 16px;
-    font-size:16px;
-    border-radius:6px;
-    cursor:pointer;
-  }
-  textarea {
-    width:100%;
-    height:320px;
-    margin-top:10px;
-    background:#020617;
-    color:#86efac;
-    padding:10px;
-    border-radius:6px;
-  }
+body {
+  background:#0b0b0b;
+  color:#00ff99;
+  font-family: monospace;
+  padding:10px;
+}
+button {
+  padding:6px 12px;
+  margin-bottom:10px;
+}
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 </style>
 </head>
 <body>
 
-<h2>PhatxitChim - JSON → M3U</h2>
-<button onclick="convert()">Fetch & Convert</button>
-
-<textarea id="out">#EXTM3U</textarea>
+<h3>M3U → JSON (group-title)</h3>
+<button id="download">⬇ Download playlist.json</button>
+<pre id="out">Loading...</pre>
 
 <script>
-/* ❌ KHÔNG encode URI */
-const API =
-  "https://api.allorigins.win/raw?url=https://raw.githubusercontent.com/anbatukumempire-hue/Loc1234/refs/heads/main/app.json
+const SOURCE_URL =
+  "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/vmttv";
 
-async function convert() {
-  const out = document.getElementById("out");
-  out.value = "Đang tải JSON...\n";
+const PROXY =
+  "https://proxy.corsfix.com/?";
 
-  try {
-    const res = await fetch(API);
-    const json = await res.json();
+let FINAL_JSON = null;
 
-    let m3u = "#EXTM3U\n";
-    let count = 0;
+fetch(PROXY + encodeURIComponent(SOURCE_URL))
+  .then(r => r.text())
+  .then(text => {
+    const lines = text.split("\n").map(l => l.trim());
+    const groups = {};
 
-    const list = json.data || [];
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith("#EXTINF")) {
+        const extinf = lines[i];
 
-    list.forEach(ch => {
-      if (!ch.url_b2c || !ch.name) return;
+        const getAttr = (name) => {
+          const m = extinf.match(new RegExp(name + '="([^"]*)"'));
+          return m ? m[1] : "";
+        };
 
-      const name = ch.name;
-      const logo = ch.logo || "
+        const name = extinf.split(",").pop().trim();
+        const group = getAttr("group-title") || "OTHER";
 
-      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="VTV",${name}\n`;
-      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="VTVCab",${name}\n`;
-      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="SCTV",${name}\n`;
-      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="HTV - TP.HCM",${name}\n`;
-      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="THVL",${name}\n`;
-      m3u += `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${name}" tvg-logo="${logo}" group-title="Quốc Tế",${name}\n`;
-      m3u += url + "\n";
-      count++;
-    });
+        // bỏ qua #EXTVLCOPT nếu có
+        let stream = "";
+        for (let j = i + 1; j < i + 4; j++) {
+          if (lines[j]?.startsWith("http")) {
+            stream = lines[j];
+            break;
+          }
+        }
 
-    out.value = m3u + `\n# Tổng kênh: ${count}`;
-    download(m3u, "vAppTV.m3u");
+        if (!groups[group]) groups[group] = [];
 
-  } catch (e) {
-    out.value = "Lỗi: " + e;
-  }
-}
+        groups[group].push({
+          name,
+          tvg_id: getAttr("tvg-id"),
+          logo: getAttr("tvg-logo"),
+          catchup: getAttr("catchup"),
+          catchup_days: getAttr("catchup-days"),
+          catchup_source: getAttr("catchup-source"),
+          stream
+        });
+      }
+    }
 
-function download(text, filename) {
-  const blob = new Blob([text], { type: "audio/x-mpegurl" });
+    FINAL_JSON = {
+      source: SOURCE_URL,
+      group_count: Object.keys(groups).length,
+      groups
+    };
+
+    console.log(FINAL_JSON);
+    document.getElementById("out").textContent =
+      JSON.stringify(FINAL_JSON, null, 2);
+  })
+  .catch(err => {
+    document.getElementById("out").textContent = err.message;
+  });
+
+document.getElementById("download").onclick = () => {
+  if (!FINAL_JSON) return;
+
+  const blob = new Blob(
+    [JSON.stringify(FINAL_JSON, null, 2)],
+    { type: "application/json" }
+  );
+
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = filename;
+  a.download = "playlist.json";
   a.click();
-}
+};
 </script>
 
 </body>
