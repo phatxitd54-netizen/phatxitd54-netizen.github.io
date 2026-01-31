@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>GOD+++ ULTRA IPTV</title>
+
+<!-- SHAKA -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+
+<!-- HLS -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<style>
+
+html,body{
+margin:0;
+height:100%;
+background:black;
+font-family:sans-serif;
+overflow:hidden;
+}
+
+/* PLAYER */
+#video{
+position:absolute;
+width:100%;
+height:100%;
+object-fit:contain;
+background:black;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+position:absolute;
+top:0;
+left:0;
+height:100%;
+width:clamp(280px,28vw,420px);
+background:rgba(20,20,20,.96);
+backdrop-filter:blur(30px);
+transform:translateX(-100%);
+transition:.25s;
+display:flex;
+flex-direction:column;
+z-index:999;
+}
+
+.sidebar.show{
+transform:translateX(0);
+}
+
+.searchBox{
+padding:14px;
+border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.search{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+outline:none;
+}
+
+.channelList{
+flex:1;
+overflow-y:auto;
+padding:10px;
+}
+
+.channel{
+display:flex;
+align-items:center;
+gap:12px;
+padding:10px;
+border-radius:12px;
+cursor:pointer;
+transition:.15s;
+color:white;
+}
+
+.channel:hover{
+background:#2563eb;
+transform:scale(1.02);
+}
+
+.logo{
+width:42px;
+height:42px;
+object-fit:contain;
+}
+
+.star{
+margin-left:auto;
+cursor:pointer;
+}
+
+/* MENU BUTTON */
+
+.menuBtn{
+position:absolute;
+top:20px;
+left:20px;
+z-index:1000;
+background:rgba(0,0,0,.6);
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:10px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<video id="video" autoplay controls></video>
+
+<button class="menuBtn"
+onclick="toggleSidebar()">☰</button>
+
+<div id="sidebar" class="sidebar">
+
+<div class="searchBox">
+<input id="search"
+class="search"
+placeholder="Search channel...">
+</div>
+
+<div id="channelList"
+class="channelList"></div>
+
+</div>
+
+<script>
+
+/* =========================
+GLOBAL
+========================= */
+
+let player;
+let hls;
+let channels=[];
+let currentChannel=null;
+let switching=false;
+
+const video =
+document.getElementById("video");
+
+const sidebar =
+document.getElementById("sidebar");
+
+/* =========================
+SIDEBAR
+========================= */
+
+function toggleSidebar(){
+sidebar.classList.toggle("show");
+}
+
+/* favorites */
+
+let favorites=
+JSON.parse(localStorage.getItem("favorites")||"[]");
+
+function renderSidebar(list=channels){
+
+const container =
+document.getElementById("channelList");
+
+container.innerHTML="";
+
+list.forEach(ch=>{
+
+const div=document.createElement("div");
+div.className="channel";
+
+div.innerHTML=`
+<img class="logo" src="${ch.logo||''}">
+<span>${ch.name}</span>
+<div class="star">
+${favorites.includes(ch.url)?"⭐":"☆"}
+</div>
+`;
+
+div.onclick=()=>{
+switchChannel(ch);
+sidebar.classList.remove("show");
+};
+
+div.querySelector(".star")
+.onclick=(e)=>{
+e.stopPropagation();
+
+if(favorites.includes(ch.url)){
+favorites=favorites.filter(f=>f!==ch.url);
+}else{
+favorites.push(ch.url);
+}
+
+localStorage.setItem(
+"favorites",
+JSON.stringify(favorites)
+);
+
+renderSidebar(list);
+};
+
+container.appendChild(div);
+
+});
+
+}
+
+/* SEARCH */
+
+document.getElementById("search")
+.oninput=(e)=>{
+
+const q=e.target.value.toLowerCase();
+
+renderSidebar(
+channels.filter(c=>
+c.name.toLowerCase().includes(q)
+)
+);
+
+};
+
+/* =========================
+DRM HELPERS
+========================= */
+
+function normalizeClearKey(kid,key){
+
+kid=kid.replace(/-/g,'').toLowerCase();
+key=key.replace(/-/g,'').toLowerCase();
+
+return {kid,key};
+}
+
+function base64ToHex(base64){
+
+const raw=atob(base64);
+let hex="";
+
+for(let i=0;i<raw.length;i++){
+hex+=raw.charCodeAt(i)
+.toString(16)
+.padStart(2,'0');
+}
+
+return hex;
+}
+
+function parseClearKeyJSON(json){
+
+try{
+
+const data=JSON.parse(json);
+
+const kid=base64ToHex(data.keys[0].kid);
+const key=base64ToHex(data.keys[0].k);
+
+return normalizeClearKey(kid,key);
+
+}catch{
+return null;
+}
+
+}
+
+/* =========================
+PLAYER CORE
+========================= */
+
+async function initShaka(){
+
+if(!shaka.Player.isBrowserSupported())
+return;
+
+player=new shaka.Player(video);
+
+player.addEventListener("error",()=>{
+recoverStream();
+});
+
+}
+
+initShaka();
+
+async function destroyPlayers(){
+
+try{
+if(player){
+await player.destroy();
+player=null;
+}
+}catch{}
+
+try{
+if(hls){
+hls.destroy();
+hls=null;
+}
+}catch{}
+
+video.removeAttribute("src");
+video.load();
+
+}
+
+/* =========================
+SMART SWITCH
+========================= */
+
+async function switchChannel(channel){
+
+if(switching) return;
+switching=true;
+
+currentChannel=channel;
+
+await destroyPlayers();
+
+const url=channel.url;
+
+try{
+
+/* DASH */
+
+if(url.includes(".mpd")){
+
+await initShaka();
+
+if(channel.kid && channel.key){
+
+await player.configure({
+drm:{
+clearKeys:{
+[channel.kid]:channel.key
+}
+}
+});
+
+}
+
+await player.load(url);
+video.play();
+
+switching=false;
+return;
+}
+
+/* HLS */
+
+if(url.includes(".m3u8")){
+
+if(Hls.isSupported()){
+
+hls=new Hls({
+lowLatencyMode:true
+});
+
+hls.loadSource(url);
+hls.attachMedia(video);
+
+hls.on(Hls.Events.ERROR,()=>{
+recoverStream();
+});
+
+}else{
+
+video.src=url;
+}
+
+video.play();
+switching=false;
+return;
+}
+
+/* NORMAL */
+
+video.src=url;
+video.play();
+
+}catch{
+
+recoverStream();
+
+}
+
+switching=false;
+}
+
+/* =========================
+RECOVERY
+========================= */
+
+function recoverStream(){
+
+if(!currentChannel) return;
+
+setTimeout(()=>{
+switchChannel(currentChannel);
+},3000);
+
+}
+
+/* =========================
+NETWORK
+========================= */
+
+window.addEventListener("offline",()=>{
+video.pause();
+});
+
+window.addEventListener("online",()=>{
+recoverStream();
+});
+
+/* =========================
+M3U PARSER + KODIPROP
+========================= */
+
+function parseM3U(data){
+
+const lines=data.split("\n");
+
+let channel={};
+
+const result=[];
+
+for(let line of lines){
+
+line=line.trim();
+
+/* EXTINF */
+if(line.startsWith("#EXTINF")){
+
+channel={};
+
+channel.name=
+line.split(",").pop();
+
+const logoMatch=
+line.match(/tvg-logo="([^"]+)"/);
+
+if(logoMatch)
+channel.logo=logoMatch[1];
+
+}
+
+/* KODIPROP */
+else if(line.includes("license_key=")){
+
+let drm=line.split("license_key=")[1].trim();
+
+/* JSON */
+if(drm.startsWith("{")){
+
+const parsed=
+parseClearKeyJSON(drm);
+
+if(parsed){
+channel.kid=parsed.kid;
+channel.key=parsed.key;
+}
+
+/* HEX */
+}else if(drm.includes(":")){
+
+let [kid,key]=drm.split(":");
+
+const norm=
+normalizeClearKey(kid,key);
+
+channel.kid=norm.kid;
+channel.key=norm.key;
+}
+
+}
+
+/* URL */
+else if(line.startsWith("http")){
+
+channel.url=line;
+result.push(channel);
+channel={};
+
+}
+
+}
+
+return result;
+
+}
+
+/* =========================
+LOAD PLAYLIST
+========================= */
+
+const m3uUrl =
+"https://raw.githubusercontent.com/huh03482-dotcom/lol/refs/heads/main/playlist_clearkey_json_inline.m3u";
+
+fetch(m3uUrl)
+.then(r=>r.text())
+.then(data=>{
+
+channels=parseM3U(data);
+
+renderSidebar();
+
+if(channels.length)
+switchChannel(channels[0]);
+
+});
+
+</script>
+</body>
+  </html>
