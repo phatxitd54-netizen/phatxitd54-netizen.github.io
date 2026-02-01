@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Giới thiệu — phatxitd54-netizen</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#4f46e5;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: dark;
+    }
+    html,body{height:100%; margin:0; background:linear-gradient(180deg,#071028 0%, #071226 100%); color:#e6eef8;}
+    .container{max-width:960px; margin:48px auto; padding:24px;}
+    header{display:flex; gap:20px; align-items:center;}
+    .avatar{
+      width:96px; height:96px; border-radius:12px; background:var(--glass);
+      display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    .avatar img{width:100%; height:100%; object-fit:cover;}
+    h1{margin:0; font-size:1.6rem;}
+    .bio{margin-top:6px; color:var(--muted);}
+    .actions{margin-left:auto; display:flex; gap:8px;}
+    .btn{background:transparent; border:1px solid rgba(255,255,255,0.06); color:inherit; padding:8px 12px; border-radius:8px; text-decoration:none; font-size:0.9rem;}
+    main{margin-top:28px;}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);}
+    #repos{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; margin-top:12px;}
+    .repo{padding:12px; border-radius:10px; background:rgba(10,14,20,0.4); border:1px solid rgba(255,255,255,0.02);}
+    .repo a{color:#dbeafe; font-weight:600; text-decoration:none;}
+    .repo p{margin:8px 0 0 0; color:var(--muted); font-size:0.92rem;}
+    .meta{margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:0.85rem;}
+    .muted{color:var(--muted);}
+    .spinner{display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,0.06); border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite; vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    footer{margin-top:30px; color:var(--muted); font-size:0.9rem; text-align:center;}
+    .section-title{display:flex; align-items:center; gap:10px;}
+    .pinned-list{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:12px;}
+    .pinned-badge{background:rgba(79,70,229,0.12); color:var(--accent); padding:4px 8px; border-radius:999px; font-weight:600; font-size:0.8rem;}
+    @media (max-width:560px){ header{flex-direction:column; align-items:flex-start} .actions{margin-left:0; width:100%; justify-content:space-between}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="avatar" id="avatar">
+        <img alt="avatar" id="avatar-img" src="" style="display:none;">
+        <svg id="avatar-fallback" width="64" height="64" viewBox="0 0 24 24" fill="none" style="opacity:.6">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 20v-1c0-2.2 3.6-4 8-4s8 1.8 8 4v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div>
+        <h1 id="display-name">phatxitd54-netizen</h1>
+        <div class="bio" id="bio">Xin chào — tôi là một lập trình viên (hoặc mô tả ngắn). Bạn có thể chỉnh sửa phần này để giới thiệu về bản thân: kỹ năng, công việc, sở thích.</div>
+      </div>
+
+      <div class="actions">
+        <a id="github-profile-btn" class="btn" href="#" target="_blank" rel="noopener">GitHub</a>
+        <a id="contact-btn" class="btn" href="mailto:your-email@example.com">Liên hệ</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2 class="section-title">Kho lưu trữ GitHub của tôi <span style="margin-left:auto" class="muted">Đã ghim 2 repo</span></h2>
+
+        <div id="pinned" style="margin-top:8px;">
+          <div class="muted">Các repo được bạn chỉ định sẽ được hiển thị phía dưới.</div>
+          <div id="pinned-list" class="pinned-list" style="margin-top:12px;"></div>
+        </div>
+
+        <hr style="margin:18px 0; border:0; height:1px; background:rgba(255,255,255,0.02)">
+
+        <div id="status" style="margin-top:8px;">
+          <span class="muted">Đang tải danh sách kho lưu trữ</span>
+          <span style="margin-left:8px" id="loader"><span class="spinner"></span></span>
+        </div>
+
+        <div id="repos" aria-live="polite"></div>
+
+        <div id="empty" style="display:none; margin-top:12px;" class="muted">
+          Không tìm thấy kho lưu trữ công khai. Nếu bạn muốn hiển thị kho riêng tư, cần thêm mã truy cập (token) — liên hệ nếu cần.
+        </div>
+
+        <div id="error" style="display:none; margin-top:12px; color:#ffb4b4;"></div>
+      </section>
+    </main>
+
+    <footer>
+      <div>Trang cá nhân được tạo tự động. Bạn có thể chỉnh sửa file <code>index.html</code> để cập nhật thông tin.</div>
+    </footer>
+  </div>
+
+  <script>
+    /**
+     * Phiên bản cập nhật:
+     * - Ghim 2 repo bạn cung cấp: phatxitd54-netizen/hoiquan và phatxitd54-netizen/Loc1234
+     * - Vẫn giữ phần danh sách động (lấy tất cả public repos) và hiển thị phía dưới.
+     *
+     * Nếu bạn muốn thay đổi sang "static" hoặc "replace", báo mình để mình cập nhật.
+     */
+
+    const username = 'phatxitd54-netizen';
+    const pinnedRepoFullNames = [
+      'phatxitd54-netizen/hoiquan',
+      'phatxitd54-netizen/Loc1234'
+    ];
+    const perPage = 100;
+
+    const avatarImg = document.getElementById('avatar-img');
+    const avatarFallback = document.getElementById('avatar-fallback');
+    const displayNameEl = document.getElementById('display-name');
+    const bioEl = document.getElementById('bio');
+    const profileBtn = document.getElementById('github-profile-btn');
+    const reposEl = document.getElementById('repos');
+    const pinnedListEl = document.getElementById('pinned-list');
+    const statusEl = document.getElementById('status');
+    const loaderEl = document.getElementById('loader');
+    const emptyEl = document.getElementById('empty');
+    const errorEl = document.getElementById('error');
+
+    profileBtn.href = `https://github.com/${username}`;
+    profileBtn.textContent = `GitHub: ${username}`;
+
+    async function fetchUser() {
+      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`);
+      if (!res.ok) throw new Error('Không thể lấy thông tin người dùng (status ' + res.status + ')');
+      return await res.json();
+    }
+
+    async function fetchRepos() {
+      const url = `https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=${perPage}&sort=updated`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Lỗi khi tải kho lưu trữ (status ' + res.status + '). Có thể do giới hạn API hoặc tên người dùng không đúng.');
+      return await res.json();
+    }
+
+    async function fetchRepo(fullName) {
+      // fullName = owner/repo
+      const res = await fetch(`https://api.github.com/repos/${fullName}`);
+      if (!res.ok) {
+        return { error: true, fullName, status: res.status };
+      }
+      return await res.json();
+    }
+
+    function createRepoNode(repo, isPinned=false) {
+      const a = document.createElement('a');
+      a.href = repo.html_url || `https://github.com/${repo.full_name || repo.fullName}`;
+      a.textContent = repo.name || (repo.full_name ? repo.full_name.split('/')[1] : repo.fullName);
+      a.target = '_blank';
+      a.rel = 'noopener';
+
+      const titleRow = document.createElement('div');
+      titleRow.style.display = 'flex';
+      titleRow.style.alignItems = 'center';
+      titleRow.style.gap = '8px';
+      titleRow.appendChild(a);
+
+      if (isPinned) {
+        const badge = document.createElement('span');
+        badge.className = 'pinned-badge';
+        badge.textContent = 'Pinned';
+        titleRow.appendChild(badge);
+      }
+
+      const desc = document.createElement('p');
+      desc.textContent = repo.description || '';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const lang = document.createElement('span');
+      lang.textContent = repo.language || '';
+      const stars = document.createElement('span');
+      stars.textContent = '★ ' + (repo.stargazers_count || 0);
+      const updated = document.createElement('span');
+      if (repo.updated_at) {
+        const d = new Date(repo.updated_at);
+        updated.textContent = 'Cập nhật: ' + d.toLocaleDateString();
+      } else {
+        updated.textContent = '';
+      }
+
+      meta.append(lang, stars, updated);
+
+      const node = document.createElement('div');
+      node.className = 'repo';
+      node.append(titleRow, desc, meta);
+      return node;
+    }
+
+    (async function init() {
+      try {
+        // Lấy thông tin người dùng (avatar, tên, bio)
+        const user = await fetchUser();
+        if (user.name) displayNameEl.textContent = user.name + ' (' + username + ')';
+        if (user.bio) bioEl.textContent = user.bio;
+        if (user.avatar_url) {
+          avatarImg.src = user.avatar_url;
+          avatarImg.onload = () => {
+            avatarImg.style.display = 'block';
+            avatarFallback.style.display = 'none';
+          };
+        }
+
+        // Hiển thị pinned repos (tải riêng từng repo)
+        const pinnedPromises = pinnedRepoFullNames.map(r => fetchRepo(r));
+        const pinnedResults = await Promise.all(pinnedPromises);
+        for (const res of pinnedResults) {
+          if (res && res.error) {
+            // Khi fetch lỗi, hiển thị fallback với link trực tiếp
+            const fallback = {
+              name: res.fullName.split('/')[1] || res.fullName,
+              fullName: res.fullName,
+              html_url: `https://github.com/${res.fullName}`,
+              description: `Không thể lấy thông tin (status ${res.status}).`,
+            };
+            pinnedListEl.appendChild(createRepoNode(fallback, true));
+          } else {
+            pinnedListEl.appendChild(createRepoNode(res, true));
+          }
+        }
+
+        // Lấy danh sách repo động
+        const repos = await fetchRepos();
+
+        loaderEl.style.display = 'none';
+        statusEl.textContent = 'Đã tải xong';
+
+        if (!Array.isArray(repos) || repos.length === 0) {
+          emptyEl.style.display = 'block';
+          return;
+        }
+
+        // Loại bỏ các repo đã được ghim từ danh sách động để tránh lặp lại
+        const pinnedSet = new Set(pinnedRepoFullNames.map(s => s.toLowerCase()));
+        const filtered = repos.filter(r => !pinnedSet.has((r.full_name || '').toLowerCase()));
+
+        // Sắp xếp để hiển thị repo có nhiều sao hoặc mới cập nhật lên trên (tùy bạn)
+        filtered.sort((a,b) => {
+          if ((b.stargazers_count||0) !== (a.stargazers_count||0)) return (b.stargazers_count||0) - (a.stargazers_count||0);
+          return new Date(b.updated_at) - new Date(a.updated_at);
+        });
+
+        for (const repo of filtered) {
+          reposEl.appendChild(createRepoNode(repo, false));
+        }
+      } catch (err) {
+        loaderEl.style.display = 'none';
+        statusEl.innerHTML = '<span class="muted">Không thể tải kho lưu trữ</span>';
+        errorEl.style.display = 'block';
+        errorEl.textContent = err.message || String(err);
+        console.error(err);
+      }
+    })();
+  </script>
+</body>
+</html>
