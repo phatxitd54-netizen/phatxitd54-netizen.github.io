@@ -14,6 +14,8 @@
 
 <!-- Shaka -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 
 <style>
 html,body{margin:0;height:100%;background:black;font-family:sans-serif;overflow:hidden}
@@ -93,21 +95,18 @@ function toggleSidebar(){sidebar.classList.toggle("show")}
 EPG (LOCAL)
 ========================= */
 async function loadEPG(){
-  try{
-    const xml=new DOMParser().parseFromString(
-      await fetch(".https://lichphatsong.site/schedule/epg.xml.gz").then(r=>r.text()),
-      "text/xml"
-    );
-    xml.querySelectorAll("programme").forEach(p=>{
-      const ch=p.getAttribute("channel");
-      if(!epgData[ch]) epgData[ch]=[];
-      epgData[ch].push({
-        title:p.querySelector("title")?.textContent||""
-      });
-    });
-  }catch{}
-}
+  const buf = await fetch("https://lichphatsong.site/schedule/epg.xml.gz").then(r=>r.arrayBuffer());
+  const xmlText = pako.ungzip(new Uint8Array(buf), {to:"string"});
+  const xml = new DOMParser().parseFromString(xmlText,"text/xml");
 
+  xml.querySelectorAll("programme").forEach(p=>{
+    const ch=p.getAttribute("channel");
+    if(!epgData[ch]) epgData[ch]=[];
+    epgData[ch].push({
+      title:p.querySelector("title")?.textContent||""
+    });
+  });
+}
 function nowEPG(id,name){
   if(epgData[id]) return epgData[id][0]?.title||"";
   for(const k in epgData){
