@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>BOSS IPTV 😈📺</title>
+<title>MONSTER IPTV 😈📺</title>
 
 <!-- PLYR -->
 <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css"/>
@@ -14,73 +14,128 @@
 
 <!-- HLS -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 
 <style>
 html,body{
-margin:0;height:100%;
+margin:0;
+height:100%;
 background:black;
-font-family:sans-serif;
 overflow:hidden;
+font-family:sans-serif;
 }
 
 /* VIDEO */
-video{width:100%;height:100%;background:black}
+video{
+width:100%;
+height:100%;
+background:black;
+}
 
 /* MENU */
 .menuBtn{
-position:absolute;top:20px;left:20px;z-index:9999;
+position:absolute;
+top:20px;
+left:20px;
+z-index:9999;
 background:rgba(0,0,0,.6);
-color:white;border:none;
-padding:10px 14px;border-radius:10px;
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:10px;
 cursor:pointer;
 }
 
 /* SIDEBAR */
 .sidebar{
-position:absolute;top:0;left:0;height:100%;
-width:420px;
-background:rgba(20,20,20,.97);
-backdrop-filter:blur(25px);
+position:absolute;
+top:0;
+left:0;
+height:100%;
+width:clamp(280px,28vw,420px);
+background:rgba(20,20,20,.96);
+backdrop-filter:blur(30px);
 transform:translateX(-100%);
 transition:.25s;
-display:flex;flex-direction:column;
+display:flex;
+flex-direction:column;
 z-index:999;
 }
 .sidebar.show{transform:translateX(0)}
 
-.searchBox{padding:12px;border-bottom:1px solid #333}
-.search{width:100%;padding:10px;border-radius:8px;border:none}
-
-.groupList{
-display:flex;gap:6px;
-padding:10px;
-overflow-x:auto;
+.searchBox{
+padding:14px;
+border-bottom:1px solid rgba(255,255,255,.05);
 }
-
-.group{
-padding:6px 12px;
-border-radius:999px;
-background:#222;color:white;
-cursor:pointer;
-white-space:nowrap;
+.search{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+outline:none;
 }
-.group.active{background:#2563eb}
 
 .channelList{
-flex:1;overflow:auto;padding:10px
+flex:1;
+overflow-y:auto;
+padding:10px;
 }
 
 .channel{
-padding:10px;border-radius:10px;
-cursor:pointer;color:white;
+display:flex;
+align-items:center;
+gap:12px;
+padding:10px;
+border-radius:12px;
+cursor:pointer;
+color:white;
 transition:.15s;
 }
-.channel:hover{background:#2563eb}
+.channel:hover{
+background:#2563eb;
+transform:scale(1.02);
+}
 
-.epg{
-font-size:12px;opacity:.8;
-margin-top:4px;
+/* ===== LOGO ENGINE ===== */
+
+.logoWrap{
+width:42px;
+height:42px;
+border-radius:8px;
+background:#111;
+display:flex;
+align-items:center;
+justify-content:center;
+overflow:hidden;
+flex-shrink:0;
+}
+
+.logo{
+width:100%;
+height:100%;
+object-fit:contain;
+opacity:0;
+transition:.2s;
+}
+.logo.loaded{opacity:1}
+
+.logoPlaceholder{
+width:100%;
+height:100%;
+background:linear-gradient(
+90deg,#111 25%,#1f1f1f 37%,#111 63%
+);
+background-size:400% 100%;
+animation:shimmer 1.2s infinite;
+}
+
+@keyframes shimmer{
+0%{background-position:100% 0}
+100%{background-position:-100% 0}
+}
+
+.star{
+margin-left:auto;
+cursor:pointer;
 }
 </style>
 </head>
@@ -92,78 +147,175 @@ margin-top:4px;
 <video id="video" playsinline crossorigin></video>
 
 <div id="sidebar" class="sidebar">
-
-<div class="searchBox">
-<input id="search" class="search" placeholder="Tìm kênh...">
-</div>
-
-<div id="groupList" class="groupList"></div>
-
-<div id="channelList" class="channelList"></div>
-
+  <div class="searchBox">
+    <input id="search" class="search" placeholder="Search channel...">
+  </div>
+  <div id="channelList" class="channelList"></div>
 </div>
 
 <script>
-/* ================= GLOBAL ================= */
-let shakaPlayer,hls,plyr;
-let channels=[],groups={};
-let currentGroup="ALL";
-let epgData={};
+/* =====================
+GLOBAL
+===================== */
+let shakaPlayer;
+let hls;
+let plyr;
+let channels=[];
 let currentChannel=null;
 let switching=false;
 
 const video=document.getElementById("video");
 const sidebar=document.getElementById("sidebar");
 
-/* ================= PLYR ================= */
+/* =====================
+PLYR INIT
+===================== */
 plyr=new Plyr(video,{
-controls:['play','progress','current-time','mute','volume','fullscreen']
+controls:['play','progress','current-time','mute','volume','settings','fullscreen']
 });
 
-/* ================= SIDEBAR ================= */
+/* =====================
+SIDEBAR
+===================== */
 function toggleSidebar(){
 sidebar.classList.toggle("show");
 }
 
-/* ================= DRM HELPERS ================= */
-const norm=x=>x.replace(/-/g,'').toLowerCase();
+let favorites=
+JSON.parse(localStorage.getItem("favorites")||"[]");
 
-function base64ToHex(b){
+/* =====================
+LOGO ENGINE
+===================== */
+const DEFAULT_LOGO=
+"https://cdn-icons-png.flaticon.com/512/727/727245.png";
+
+function safeLogo(url){
+if(!url) return null;
+return url.replace(/^http:\/\//,'https://');
+}
+
+function createLogo(ch){
+const wrap=document.createElement("div");
+wrap.className="logoWrap";
+
+const ph=document.createElement("div");
+ph.className="logoPlaceholder";
+wrap.appendChild(ph);
+
+const img=document.createElement("img");
+img.className="logo";
+
+let src=
+localStorage.getItem("logo_"+ch.name) ||
+safeLogo(ch.logo) ||
+DEFAULT_LOGO;
+
+img.src=src;
+
+img.onload=()=>{
+img.classList.add("loaded");
+ph.remove();
+localStorage.setItem("logo_"+ch.name,src);
+};
+
+img.onerror=()=>{
+img.src=DEFAULT_LOGO;
+img.classList.add("loaded");
+ph.remove();
+};
+
+wrap.appendChild(img);
+return wrap;
+}
+
+/* =====================
+RENDER SIDEBAR
+===================== */
+function renderSidebar(list=channels){
+
+const box=document.getElementById("channelList");
+box.innerHTML="";
+
+list.forEach(ch=>{
+
+const div=document.createElement("div");
+div.className="channel";
+
+div.appendChild(createLogo(ch));
+
+const name=document.createElement("span");
+name.textContent=ch.name;
+div.appendChild(name);
+
+const star=document.createElement("div");
+star.className="star";
+star.textContent=favorites.includes(ch.url)?"⭐":"☆";
+div.appendChild(star);
+
+div.onclick=()=>{
+switchChannel(ch);
+sidebar.classList.remove("show");
+};
+
+star.onclick=(e)=>{
+e.stopPropagation();
+favorites.includes(ch.url)
+? favorites=favorites.filter(f=>f!==ch.url)
+: favorites.push(ch.url);
+localStorage.setItem("favorites",JSON.stringify(favorites));
+renderSidebar(list);
+};
+
+box.appendChild(div);
+});
+}
+
+search.oninput=e=>{
+const q=e.target.value.toLowerCase();
+renderSidebar(channels.filter(c=>c.name.toLowerCase().includes(q)));
+};
+
+/* =====================
+DRM HELPERS
+===================== */
+const norm=s=>s.replace(/-/g,'').toLowerCase();
+function b64hex(b){
 const r=atob(b);let h="";
 for(let i=0;i<r.length;i++)
 h+=r.charCodeAt(i).toString(16).padStart(2,'0');
 return h;
 }
-
 function parseClearKeyJSON(j){
 try{
 const d=JSON.parse(j);
-return{
-kid:norm(base64ToHex(d.keys[0].kid)),
-key:norm(base64ToHex(d.keys[0].k))
-};
+return{kid:norm(b64hex(d.keys[0].kid)),key:norm(b64hex(d.keys[0].k))};
 }catch{return null;}
 }
 
-/* ================= PLAYERS ================= */
+/* =====================
+PLAYERS
+===================== */
 async function initShaka(){
 if(!shaka.Player.isBrowserSupported())return;
 shakaPlayer=new shaka.Player(video);
-shakaPlayer.addEventListener("error",recover);
+shakaPlayer.addEventListener("error",()=>recover());
 }
 
 async function destroyPlayers(){
-try{if(shakaPlayer){await shakaPlayer.destroy();shakaPlayer=null}}catch{}
-try{if(hls){hls.destroy();hls=null}}catch{}
-video.removeAttribute("src");video.load();
+try{if(shakaPlayer){await shakaPlayer.destroy();shakaPlayer=null;}}catch{}
+try{if(hls){hls.destroy();hls=null;}}catch{}
+video.removeAttribute("src");
+video.load();
 }
 
-/* ================= SMART SWITCH ================= */
+/* =====================
+SMART SWITCH
+===================== */
 async function switchChannel(ch){
-if(switching)return;
+if(switching) return;
 switching=true;
 currentChannel=ch;
-
 await destroyPlayers();
 
 try{
@@ -181,10 +333,10 @@ switching=false;return;
 
 if(ch.url.includes(".m3u8")){
 if(Hls.isSupported()){
-hls=new Hls();
+hls=new Hls({lowLatencyMode:true});
 hls.loadSource(ch.url);
 hls.attachMedia(video);
-hls.on(Hls.Events.ERROR,recover);
+hls.on(Hls.Events.ERROR,()=>recover());
 }else video.src=ch.url;
 plyr.play();
 switching=false;return;
@@ -192,88 +344,41 @@ switching=false;return;
 
 video.src=ch.url;
 plyr.play();
-}catch{recover()}
+
+}catch{recover();}
 switching=false;
 }
 
-/* ================= RECOVER ================= */
+/* =====================
+RECOVERY
+===================== */
 function recover(){
 if(!currentChannel)return;
 setTimeout(()=>switchChannel(currentChannel),3000);
 }
 
-/* ================= EPG ================= */
-function parseEPG(xml){
-const dom=new DOMParser().parseFromString(xml,"text/xml");
-dom.querySelectorAll("programme").forEach(p=>{
-const ch=p.getAttribute("channel");
-const start=p.getAttribute("start");
-const title=p.querySelector("title")?.textContent;
-if(!epgData[ch])epgData[ch]=[];
-epgData[ch].push({start,title});
-});
-}
+window.addEventListener("offline",()=>plyr.pause());
+window.addEventListener("online",()=>recover());
 
-/* ================= RENDER ================= */
-function renderGroups(){
-const box=document.getElementById("groupList");
-box.innerHTML='<div class="group active" data="ALL">ALL</div>';
-Object.keys(groups).forEach(g=>{
-box.innerHTML+=`<div class="group" data="${g}">${g}</div>`;
-});
-box.querySelectorAll(".group").forEach(b=>{
-b.onclick=()=>{
-document.querySelectorAll(".group").forEach(x=>x.classList.remove("active"));
-b.classList.add("active");
-currentGroup=b.getAttribute("data");
-renderChannels();
-};
-});
-}
-
-function renderChannels(){
-const box=document.getElementById("channelList");
-box.innerHTML="";
-let list=currentGroup==="ALL"?channels:groups[currentGroup];
-list.forEach(ch=>{
-const epg=epgData[ch.tvgid]?.[0]?.title||"";
-box.innerHTML+=`
-<div class="channel" onclick='switchChannel(channels[${channels.indexOf(ch)}])'>
-${ch.name}
-<div class="epg">${epg}</div>
-</div>`;
-});
-}
-
-search.oninput=e=>{
-const q=e.target.value.toLowerCase();
-renderChannels(
-channels.filter(c=>c.name.toLowerCase().includes(q))
-);
-};
-
-/* ================= M3U PARSER ================= */
-function parseM3U(txt){
-const lines=txt.split("\n");
+/* =====================
+M3U PARSER + KODIPROP
+===================== */
+function parseM3U(data){
+const lines=data.split("\n");
 let ch={},out=[];
-lines.forEach(l=>{
+for(let l of lines){
 l=l.trim();
 if(l.startsWith("#EXTINF")){
 ch={};
 ch.name=l.split(",").pop();
-const g=l.match(/group-title="([^"]+)"/);
-if(g){
-ch.group=g[1];
-groups[ch.group]=groups[ch.group]||[];
-}
-const id=l.match(/tvg-id="([^"]+)"/);
-if(id)ch.tvgid=id[1];
+const m=l.match(/tvg-logo="([^"]+)"|logo="([^"]+)"/);
+if(m) ch.logo=m[1]||m[2];
 }
 else if(l.includes("license_key=")){
-let d=l.split("license_key=")[1];
+let d=l.split("license_key=")[1].trim();
 if(d.startsWith("{")){
 const p=parseClearKeyJSON(d);
-if(p){ch.kid=p.kid;ch.key=p.key}
+if(p){ch.kid=p.kid;ch.key=p.key;}
 }else if(d.includes(":")){
 let[kid,key]=d.split(":");
 ch.kid=norm(kid);ch.key=norm(key);
@@ -282,41 +387,22 @@ ch.kid=norm(kid);ch.key=norm(key);
 else if(l.startsWith("http")){
 ch.url=l;
 out.push(ch);
-if(ch.group)groups[ch.group].push(ch);
 ch={};
 }
-});
+}
 return out;
 }
 
-/* ================= LOAD ================= */
-fetch("https://raw.githubusercontent.com/huh03482-dotcom/lol/refs/heads/main/playlist_clearkey_json_inline.m3u")
+/* =====================
+LOAD PLAYLIST
+===================== */
+fetch("https://raw.githubusercontent.com/dovietsy/acestreamfb/refs/heads/main/acestreamfb.txt")
 .then(r=>r.text())
 .then(t=>{
 channels=parseM3U(t);
-renderGroups();
-renderChannels();
-switchChannel(channels[0]);
+renderSidebar();
+if(channels.length) switchChannel(channels[0]);
 });
-
-fetch("https://lichphatsong.site/schedule/epg.xml.gz")
-.then(res => res.arrayBuffer())
-.then(buffer => {
-
-const uint8 =
-new Uint8Array(buffer);
-
-/* GUNZIP */
-const xmlText =
-pako.ungzip(uint8, { to: "string" });
-
-parseEPG(xmlText);
-
-})
-.catch(err=>{
-console.error("EPG load failed", err);
-});
-
 </script>
 </body>
-  </html>
+</html>
