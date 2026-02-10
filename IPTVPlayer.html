@@ -218,7 +218,7 @@ BOOT
 (async()=>{
   await loadEPG();
   const txt=await fetch("https://phatxitd54-netizen.github.io/playlist_clearkey_json_inline.m3u").then(r=>r.text());
-  channels=parseM3U(m3u);
+  channels=parseM3U(txt);
 
   if(!channels.length){
     alert("Playlist không có kênh!");
