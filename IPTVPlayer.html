@@ -246,11 +246,11 @@ BOOT
   await loadEPG();
 
   const M3U_URL =
-  "https://onnanetwork.xyz/https://raw.githubusercontent.com/huh03482-dotcom/lol/main/playlist_clearkey_json_inline.m3u";
+  "https://onnanetwork.xyz/https://byvn.net/QMQF";
 
   const txt=await fetch(M3U_URL).then(r=>r.text());
   channels=parseM3U(txt);
-
+alert("Số kênh load được: " + channels.length);
   console.log("Channels:",channels.length);
 
   renderGroups();
