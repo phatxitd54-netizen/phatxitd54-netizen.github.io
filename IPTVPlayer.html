@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>IPTV Hybrid Player</title>
+<title>IPTV Video.js + Shaka</title>
 
-<!-- JWPlayer -->
-<script src="https://ssl.p.jwpcdn.com/player/v/8.8.2/jwplayer.js"></script>
-<script>
-jwplayer.key="W7zSm81+mmIsg7F+fyHRKhF3ggLkTqtGMhvI92kbqf/ysE99";
-</script>
+<!-- Video.js -->
+<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
 <!-- Shaka -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
 <style>
-html,body{margin:0;height:100%;background:black;font-family:sans-serif;overflow:hidden}
+html,body{
+margin:0;height:100%;background:black;
+font-family:sans-serif;overflow:hidden
+}
 
-#jw,#shaka{width:100%;height:100%;display:none}
+#vjs,#shaka{width:100%;height:100%;display:none}
 video{width:100%;height:100%;background:black}
 
 .sidebar{
@@ -37,10 +38,8 @@ border:none;padding:10px 14px;border-radius:10px;cursor:pointer
 }
 
 .searchBox{padding:10px;border-bottom:1px solid rgba(255,255,255,.08)}
-.search{width:100%;padding:10px;border-radius:10px;border:none}
-
-.groupSelect{
-margin-top:8px;width:100%;padding:8px;border-radius:8px
+.search,.groupSelect{
+width:100%;padding:10px;border-radius:10px;border:none;margin-top:6px
 }
 
 .channelList{flex:1;overflow-y:auto;padding:10px}
@@ -52,15 +51,22 @@ padding:10px;border-radius:12px;cursor:pointer
 .channel:hover{background:#2563eb}
 
 .logo{width:40px;height:40px;object-fit:contain}
-
 .epg{font-size:12px;opacity:.8}
 </style>
 </head>
 
 <body>
 
-<div id="jw"></div>
+<!-- Video.js -->
+<div id="vjs">
+  <video id="videojs"
+    class="video-js vjs-default-skin"
+    controls autoplay preload="auto"
+    width="100%" height="100%">
+  </video>
+</div>
 
+<!-- Shaka -->
 <div id="shaka">
   <video id="video" controls autoplay></video>
 </div>
@@ -76,28 +82,24 @@ padding:10px;border-radius:12px;cursor:pointer
 </div>
 
 <script>
+console.log("BOOT...");
+
 /* =========================
 GLOBAL
 ========================= */
 let channels=[],epgData={},current=null;
+let vjsPlayer=null;
+let shakaPlayer=null;
+
 const sidebar=document.getElementById("sidebar");
-const jw=jwplayer("jw");
-const video=document.getElementById("video");
-let shakaPlayer;
-
-/* =========================
-INIT
-========================= */
-jw.setup({width:"100%",height:"100%",autostart:true});
-
-async function initShaka(){
-  shakaPlayer=new shaka.Player(video);
-}
+const shakaVideo=document.getElementById("video");
 
 /* =========================
 UI
 ========================= */
-function toggleSidebar(){sidebar.classList.toggle("show")}
+function toggleSidebar(){
+  sidebar.classList.toggle("show");
+}
 
 /* =========================
 EPG
@@ -107,6 +109,7 @@ async function loadEPG(){
     await fetch("https://vnepg.site/epg.xml").then(r=>r.text()),
     "text/xml"
   );
+
   xml.querySelectorAll("programme").forEach(p=>{
     const ch=p.getAttribute("channel");
     if(!epgData[ch]) epgData[ch]=[];
@@ -115,7 +118,15 @@ async function loadEPG(){
     });
   });
 }
-const nowEPG=id=>epgData[id]?.[0]?.title||"";
+
+function nowEPG(id,name){
+  if(epgData[id]) return epgData[id][0]?.title||"";
+  for(const k in epgData){
+    if(name && k.toLowerCase().includes(name.toLowerCase()))
+      return epgData[k][0]?.title||"";
+  }
+  return "";
+}
 
 /* =========================
 RENDER
@@ -130,8 +141,9 @@ function render(list){
       <img class="logo" src="${c.logo||''}">
       <div>
         <b>${c.name}</b>
-        <div class="epg">${nowEPG(c.tvg)}</div>
-      </div>`;
+        <div class="epg">${nowEPG(c.tvg,c.name)}</div>
+      </div>
+    `;
     d.onclick=()=>play(c);
     box.appendChild(d);
   });
@@ -146,19 +158,14 @@ function renderGroups(){
     });
 }
 
-document.getElementById("search").oninput=e=>{
-  filter();
-};
-document.getElementById("group").onchange=filter;
-
-function filter(){
+search.oninput=group.onchange=()=>{
   const q=search.value.toLowerCase();
   const g=group.value;
   render(channels.filter(c=>
     c.name.toLowerCase().includes(q) &&
     (!g || c.group===g)
   ));
-}
+};
 
 /* =========================
 PLAYER SWITCH
@@ -167,26 +174,41 @@ async function play(ch){
   current=ch;
   sidebar.classList.remove("show");
 
-  jw.stop();
-  jw.getContainer().style.display="none";
+  // destroy players
+  if(vjsPlayer){ vjsPlayer.dispose(); vjsPlayer=null; }
+  document.getElementById("vjs").style.display="none";
   document.getElementById("shaka").style.display="none";
 
   // DASH + DRM → SHAKA
   if(ch.url.includes(".mpd") && ch.kid){
     document.getElementById("shaka").style.display="block";
-    if(!shakaPlayer) await initShaka();
+    if(!shakaPlayer) shakaPlayer=new shaka.Player(shakaVideo);
+
     await shakaPlayer.configure({
-      drm:{clearKeys:{[ch.kid]:ch.key}}
+      drm:{ clearKeys:{ [ch.kid]:ch.key } }
     });
+
     await shakaPlayer.load(ch.url);
-    video.play();
+    shakaVideo.play();
     return;
   }
 
-  // HLS / NON DRM → JW
-  jw.getContainer().style.display="block";
-  jw.load([{file:ch.url}]);
-  jw.play();
+  // HLS → VIDEO.JS
+  document.getElementById("vjs").style.display="block";
+
+  vjsPlayer = videojs("videojs", {
+    autoplay: true,
+    controls: true,
+    preload: "auto",
+    fluid: true
+  });
+
+  vjsPlayer.src({
+    src: ch.url,
+    type: "application/x-mpegURL"
+  });
+
+  vjsPlayer.play();
 }
 
 /* =========================
@@ -222,10 +244,15 @@ BOOT
 ========================= */
 (async()=>{
   await loadEPG();
-  const m3u=await fetch(
-    "https://raw.githubusercontent.com/huh03482-dotcom/lol/refs/heads/main/playlist_clearkey_json_inline.m3u"
-  ).then(r=>r.text());
-  channels=parseM3U(m3u);
+
+  const M3U_URL =
+  "https://onnanetwork.xyz/https://raw.githubusercontent.com/huh03482-dotcom/lol/main/playlist_clearkey_json_inline.m3u";
+
+  const txt=await fetch(M3U_URL).then(r=>r.text());
+  channels=parseM3U(txt);
+
+  console.log("Channels:",channels.length);
+
   renderGroups();
   render(channels);
   play(channels[0]);
