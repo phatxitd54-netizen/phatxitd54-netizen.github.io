@@ -1,235 +1,341 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>IPTV Plyr</title>
+<title>MONSTER IPTV 😈📺</title>
 
-<!-- Plyr -->
-<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-<script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+<!-- PLYR -->
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css"/>
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
-<!-- hls.js -->
+<!-- SHAKA -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+
+<!-- HLS -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-<!-- Shaka -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-
 <style>
-html,body{margin:0;height:100%;background:black;font-family:sans-serif;overflow:hidden}
-#plyrBox,#shakaBox{width:100%;height:100%;display:none}
-video{width:100%;height:100%;background:black}
-
-.sidebar{
-position:absolute;top:0;left:0;height:100%;
-width:clamp(300px,32vw,480px);
-background:rgba(20,20,20,.97);color:white;
-transform:translateX(-100%);transition:.25s;
-z-index:999;display:flex;flex-direction:column
+html,body{
+margin:0;
+height:100%;
+background:black;
+overflow:hidden;
+font-family:sans-serif;
 }
-.sidebar.show{transform:translateX(0)}
 
+/* VIDEO */
+video{
+width:100%;
+height:100%;
+background:black;
+}
+
+/* MENU */
 .menuBtn{
-position:absolute;top:20px;left:20px;z-index:1000;
-background:rgba(0,0,0,.6);color:white;
-border:none;padding:10px 14px;border-radius:10px;cursor:pointer
+position:absolute;
+top:20px;
+left:20px;
+z-index:9999;
+background:rgba(0,0,0,.6);
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:10px;
+cursor:pointer;
 }
 
-.searchBox{padding:10px;border-bottom:1px solid rgba(255,255,255,.08)}
-.search,.groupSelect{
-width:100%;padding:10px;border-radius:10px;border:none;margin-top:6px
+/* SIDEBAR */
+.sidebar{
+position:absolute;
+top:0;
+left:0;
+height:100%;
+width:clamp(280px,28vw,420px);
+background:rgba(20,20,20,.96);
+backdrop-filter:blur(30px);
+transform:translateX(-100%);
+transition:.25s;
+display:flex;
+flex-direction:column;
+z-index:999;
 }
 
-.channelList{flex:1;overflow-y:auto;padding:10px}
+.sidebar.show{
+transform:translateX(0);
+}
+
+.searchBox{
+padding:14px;
+border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.search{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+outline:none;
+}
+
+.channelList{
+flex:1;
+overflow-y:auto;
+padding:10px;
+}
+
 .channel{
-display:flex;gap:10px;align-items:center;
-padding:10px;border-radius:12px;cursor:pointer
+display:flex;
+align-items:center;
+gap:12px;
+padding:10px;
+border-radius:12px;
+cursor:pointer;
+color:white;
+transition:.15s;
 }
-.channel:hover{background:#2563eb}
-.logo{width:40px;height:40px;object-fit:contain}
-.epg{font-size:12px;opacity:.8}
+
+.channel:hover{
+background:#2563eb;
+transform:scale(1.02);
+}
+
+.logo{
+width:42px;
+height:42px;
+object-fit:contain;
+}
+
+.star{
+margin-left:auto;
+cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<div id="plyrBox">
-  <video id="plyrVideo" playsinline controls></video>
-</div>
-
-<div id="shakaBox">
-  <video id="shakaVideo" controls></video>
-</div>
-
 <button class="menuBtn" onclick="toggleSidebar()">☰</button>
+
+<video id="video" playsinline crossorigin></video>
 
 <div id="sidebar" class="sidebar">
   <div class="searchBox">
-    <input id="search" class="search" placeholder="Search channel">
-    <select id="group" class="groupSelect"></select>
+    <input id="search" class="search" placeholder="Search channel...">
   </div>
   <div id="channelList" class="channelList"></div>
 </div>
 
 <script>
-/* =========================
+/* =====================
 GLOBAL
-========================= */
-let channels=[],epgData={},current=null;
-let plyr=null,hls=null,shakaPlayer=null;
+===================== */
+let shakaPlayer;
+let hls;
+let plyr;
+let channels=[];
+let currentChannel=null;
+let switching=false;
 
-const plyrBox=document.getElementById("plyrBox");
-const shakaBox=document.getElementById("shakaBox");
-const plyrVideo=document.getElementById("plyrVideo");
-const shakaVideo=document.getElementById("shakaVideo");
+const video=document.getElementById("video");
 const sidebar=document.getElementById("sidebar");
 
-/* =========================
-UI
-========================= */
-function toggleSidebar(){sidebar.classList.toggle("show")}
+/* =====================
+PLYR INIT
+===================== */
+plyr = new Plyr(video,{
+controls:[
+'play','progress','current-time',
+'mute','volume','settings','fullscreen'
+],
+fullscreen:{enabled:true}
+});
 
-/* =========================
-EPG (LOCAL)
-========================= */
-async function loadEPG(){
-  const buf = await fetch("https://lichphatsong.site/schedule/epg.xml.gz").then(r=>r.arrayBuffer());
-  const xmlText = pako.ungzip(new Uint8Array(buf), {to:"string"});
-  const xml = new DOMParser().parseFromString(xmlText,"text/xml");
-
-  xml.querySelectorAll("programme").forEach(p=>{
-    const ch=p.getAttribute("channel");
-    if(!epgData[ch]) epgData[ch]=[];
-    epgData[ch].push({
-      title:p.querySelector("title")?.textContent||""
-    });
-  });
-}
-function nowEPG(id,name){
-  if(epgData[id]) return epgData[id][0]?.title||"";
-  for(const k in epgData){
-    if(name && k.toLowerCase().includes(name.toLowerCase()))
-      return epgData[k][0]?.title||"";
-  }
-  return "";
+/* =====================
+SIDEBAR
+===================== */
+function toggleSidebar(){
+sidebar.classList.toggle("show");
 }
 
-/* =========================
-RENDER
-========================= */
-function render(list){
-  channelList.innerHTML="";
-  list.forEach(c=>{
-    const d=document.createElement("div");
-    d.className="channel";
-    d.innerHTML=`
-      <img class="logo" src="${c.logo||''}">
-      <div>
-        <b>${c.name}</b>
-        <div class="epg">${nowEPG(c.tvg,c.name)}</div>
-      </div>
-    `;
-    d.onclick=()=>play(c);
-    channelList.appendChild(d);
-  });
-}
+let favorites=
+JSON.parse(localStorage.getItem("favorites")||"[]");
 
-function renderGroups(){
-  group.innerHTML="<option value=''>All groups</option>";
-  [...new Set(channels.map(c=>c.group).filter(Boolean))]
-    .forEach(g=>group.innerHTML+=`<option>${g}</option>`);
-}
+function renderSidebar(list=channels){
 
-search.oninput=group.onchange=()=>{
-  const q=search.value.toLowerCase(),g=group.value;
-  render(channels.filter(c=>
-    c.name.toLowerCase().includes(q) &&
-    (!g||c.group===g)
-  ));
+const box=document.getElementById("channelList");
+box.innerHTML="";
+
+list.forEach(ch=>{
+const div=document.createElement("div");
+div.className="channel";
+div.innerHTML=`
+<img class="logo" src="${ch.logo||''}">
+<span>${ch.name}</span>
+<div class="star">${favorites.includes(ch.url)?"⭐":"☆"}</div>
+`;
+
+div.onclick=()=>{
+switchChannel(ch);
+sidebar.classList.remove("show");
 };
 
-/* =========================
-PLAYER SWITCH
-========================= */
-async function play(ch){
-  current=ch;
-  sidebar.classList.remove("show");
+div.querySelector(".star").onclick=(e)=>{
+e.stopPropagation();
+favorites.includes(ch.url)
+? favorites=favorites.filter(f=>f!==ch.url)
+: favorites.push(ch.url);
 
-  // cleanup
-  if(hls){hls.destroy();hls=null}
-  if(plyr){plyr.destroy();plyr=null}
-  plyrBox.style.display="none";
-  shakaBox.style.display="none";
+localStorage.setItem("favorites",JSON.stringify(favorites));
+renderSidebar(list);
+};
 
-  // DASH DRM → SHAKA
-  if(ch.url.includes(".mpd") && ch.kid){
-    shakaBox.style.display="block";
-    if(!shakaPlayer) shakaPlayer=new shaka.Player(shakaVideo);
-    await shakaPlayer.configure({
-      drm:{clearKeys:{[ch.kid]:ch.key}}
-    });
-    await shakaPlayer.load(ch.url);
-    shakaVideo.play();
-    return;
-  }
-
-  // HLS → PLYR
-  plyrBox.style.display="block";
-  plyr=new Plyr(plyrVideo);
-
-  if(Hls.isSupported()){
-    hls=new Hls();
-    hls.loadSource(ch.url);
-    hls.attachMedia(plyrVideo);
-  }else{
-    plyrVideo.src=ch.url;
-  }
-  plyr.play();
+box.appendChild(div);
+});
 }
 
-/* =========================
-M3U PARSER (BOM SAFE)
-========================= */
-function parseM3U(txt){
-  txt=txt.replace(/^\uFEFF/,"");
-  const lines=txt.split(/\r?\n/);
-  let c=null,out=[];
-  for(let l of lines){
-    l=l.trim();
-    if(!l) continue;
-    if(l.startsWith("#EXTINF")){
-      c={};
-      c.name=l.split(",").pop();
-      c.logo=l.match(/tvg-logo="([^"]+)"/)?.[1];
-      c.tvg=l.match(/tvg-id="([^"]+)"/)?.[1];
-      c.group=l.match(/group-title="([^"]+)"/)?.[1];
-    }else if(l.startsWith("https")&&c){
-      c.url=l;out.push(c);c=null;
-    }
-  }
-  return out;
+search.oninput=e=>{
+const q=e.target.value.toLowerCase();
+renderSidebar(channels.filter(c=>c.name.toLowerCase().includes(q)));
+};
+
+/* =====================
+DRM HELPERS
+===================== */
+const norm=(k)=>k.replace(/-/g,'').toLowerCase();
+
+function base64ToHex(b){
+const r=atob(b);let h="";
+for(let i=0;i<r.length;i++)
+h+=r.charCodeAt(i).toString(16).padStart(2,'0');
+return h;
 }
 
-/* =========================
-BOOT
-========================= */
-(async()=>{
-  await loadEPG();
-  const txt=await fetch("https://phatxitd54-netizen.github.io/playlist_clearkey_json_inline.m3u").then(r=>r.text());
-  channels=parseM3U(txt);
+function parseClearKeyJSON(j){
+try{
+const d=JSON.parse(j);
+return{
+kid:norm(base64ToHex(d.keys[0].kid)),
+key:norm(base64ToHex(d.keys[0].k))
+};
+}catch{return null;}
+}
 
-  if(!channels.length){
-    alert("Playlist không có kênh!");
-    return;
-  }
+/* =====================
+PLAYERS
+===================== */
+async function initShaka(){
+if(!shaka.Player.isBrowserSupported())return;
+shakaPlayer=new shaka.Player(video);
+shakaPlayer.addEventListener("error",()=>recover());
+}
 
-  renderGroups();
-  render(channels);
-  play(channels[0]);
-})();
+async function destroyPlayers(){
+try{if(shakaPlayer){await shakaPlayer.destroy();shakaPlayer=null;}}catch{}
+try{if(hls){hls.destroy();hls=null;}}catch{}
+video.removeAttribute("src");
+video.load();
+}
+
+/* =====================
+SMART SWITCH
+===================== */
+async function switchChannel(ch){
+if(switching) return;
+switching=true;
+currentChannel=ch;
+
+await destroyPlayers();
+
+try{
+if(ch.url.includes(".mpd")){
+await initShaka();
+if(ch.kid && ch.key){
+await shakaPlayer.configure({
+drm:{clearKeys:{[ch.kid]:ch.key}}
+});
+}
+await shakaPlayer.load(ch.url);
+plyr.play();
+switching=false;
+return;
+}
+
+if(ch.url.includes(".m3u8")){
+if(Hls.isSupported()){
+hls=new Hls({lowLatencyMode:true});
+hls.loadSource(ch.url);
+hls.attachMedia(video);
+hls.on(Hls.Events.ERROR,()=>recover());
+}else video.src=ch.url;
+
+plyr.play();
+switching=false;
+return;
+}
+
+video.src=ch.url;
+plyr.play();
+}catch{
+recover();
+}
+switching=false;
+}
+
+/* =====================
+RECOVERY
+===================== */
+function recover(){
+if(!currentChannel)return;
+setTimeout(()=>switchChannel(currentChannel),3000);
+}
+
+window.addEventListener("offline",()=>plyr.pause());
+window.addEventListener("online",()=>recover());
+
+/* =====================
+M3U PARSER (KODIPROP)
+===================== */
+function parseM3U(data){
+const lines=data.split("\n");
+let ch={},out=[];
+for(let l of lines){
+l=l.trim();
+if(l.startsWith("#EXTINF")){
+ch={};
+ch.name=l.split(",").pop();
+const m=l.match(/tvg-logo="([^"]+)"/);
+if(m)ch.logo=m[1];
+}
+else if(l.includes("license_key=")){
+let d=l.split("license_key=")[1].trim();
+if(d.startsWith("{")){
+const p=parseClearKeyJSON(d);
+if(p){ch.kid=p.kid;ch.key=p.key;}
+}else if(d.includes(":")){
+let[kid,key]=d.split(":");
+ch.kid=norm(kid);ch.key=norm(key);
+}
+}
+else if(l.startsWith("https")){
+ch.url=l;
+out.push(ch);
+ch={};
+}
+}
+return out;
+}
+
+/* =====================
+LOAD PLAYLIST
+===================== */
+fetch("https://raw.githubusercontent.com/huh03482-dotcom/lol/refs/heads/main/playlist_clearkey_json_inline.m3u")
+.then(r=>r.text())
+.then(t=>{
+channels=parseM3U(t);
+renderSidebar();
+if(channels.length) switchChannel(channels[0]);
+});
 </script>
-
 </body>
 </html>
