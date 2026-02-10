@@ -3,523 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>IPTV Hybrid Player</title>
 
-<title>IPTV Player</title>
+<!-- JWPlayer -->
+<script src="https://ssl.p.jwpcdn.com/player/v/8.8.2/jwplayer.js"></script>
+<script>
+jwplayer.key="W7zSm81+mmIsg7F+fyHRKhF3ggLkTqtGMhvI92kbqf/ysE99";
+</script>
 
-<!-- SHAKA -->
+<!-- Shaka -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-<!-- HLS -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
 <style>
+html,body{margin:0;height:100%;background:black;font-family:sans-serif;overflow:hidden}
 
-html,body{
-margin:0;
-height:100%;
-background:black;
-font-family:sans-serif;
-overflow:hidden;
-}
-
-/* PLAYER */
-#video{
-position:absolute;
-width:100%;
-height:100%;
-object-fit:contain;
-background:black;
-}
-
-/* SIDEBAR */
+#jw,#shaka{width:100%;height:100%;display:none}
+video{width:100%;height:100%;background:black}
 
 .sidebar{
-position:absolute;
-top:0;
-left:0;
-height:100%;
-width:clamp(280px,28vw,420px);
-background:rgba(20,20,20,.96);
-backdrop-filter:blur(30px);
+position:absolute;left:0;top:0;height:100%;
+width:clamp(320px,32vw,480px);
+background:rgba(20,20,20,.97);
+color:white;z-index:999;
 transform:translateX(-100%);
-transition:.25s;
-display:flex;
-flex-direction:column;
-z-index:999;
+transition:.25s;display:flex;flex-direction:column
 }
-
-.sidebar.show{
-transform:translateX(0);
-}
-
-.searchBox{
-padding:14px;
-border-bottom:1px solid rgba(255,255,255,.05);
-}
-
-.search{
-width:100%;
-padding:12px;
-border-radius:10px;
-border:none;
-outline:none;
-}
-
-.channelList{
-flex:1;
-overflow-y:auto;
-padding:10px;
-}
-
-.channel{
-display:flex;
-align-items:center;
-gap:12px;
-padding:10px;
-border-radius:12px;
-cursor:pointer;
-transition:.15s;
-color:white;
-}
-
-.channel:hover{
-background:#2563eb;
-transform:scale(1.02);
-}
-
-.logo{
-width:42px;
-height:42px;
-object-fit:contain;
-}
-
-.star{
-margin-left:auto;
-cursor:pointer;
-}
-
-/* MENU BUTTON */
+.sidebar.show{transform:translateX(0)}
 
 .menuBtn{
-position:absolute;
-top:20px;
-left:20px;
-z-index:1000;
-background:rgba(0,0,0,.6);
-color:white;
-border:none;
-padding:10px 14px;
-border-radius:10px;
-cursor:pointer;
+position:absolute;top:20px;left:20px;z-index:1000;
+background:rgba(0,0,0,.6);color:white;
+border:none;padding:10px 14px;border-radius:10px;cursor:pointer
 }
 
+.searchBox{padding:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.search{width:100%;padding:10px;border-radius:10px;border:none}
+
+.groupSelect{
+margin-top:8px;width:100%;padding:8px;border-radius:8px
+}
+
+.channelList{flex:1;overflow-y:auto;padding:10px}
+
+.channel{
+display:flex;gap:10px;align-items:center;
+padding:10px;border-radius:12px;cursor:pointer
+}
+.channel:hover{background:#2563eb}
+
+.logo{width:40px;height:40px;object-fit:contain}
+
+.epg{font-size:12px;opacity:.8}
 </style>
 </head>
 
 <body>
 
-<video id="video" autoplay controls></video>
+<div id="jw"></div>
 
-<button class="menuBtn"
-onclick="toggleSidebar()">☰</button>
-
-<div id="sidebar" class="sidebar">
-
-<div class="searchBox">
-<input id="search"
-class="search"
-placeholder="Search channel...">
+<div id="shaka">
+  <video id="video" controls autoplay></video>
 </div>
 
-<div id="channelList"
-class="channelList"></div>
+<button class="menuBtn" onclick="toggleSidebar()">☰</button>
 
+<div id="sidebar" class="sidebar">
+  <div class="searchBox">
+    <input id="search" class="search" placeholder="Search channel">
+    <select id="group" class="groupSelect"></select>
+  </div>
+  <div id="channelList" class="channelList"></div>
 </div>
 
 <script>
-
 /* =========================
 GLOBAL
 ========================= */
-
-let player;
-let hls;
-let channels=[];
-let currentChannel=null;
-let switching=false;
-
-const video =
-document.getElementById("video");
-
-const sidebar =
-document.getElementById("sidebar");
+let channels=[],epgData={},current=null;
+const sidebar=document.getElementById("sidebar");
+const jw=jwplayer("jw");
+const video=document.getElementById("video");
+let shakaPlayer;
 
 /* =========================
-SIDEBAR
+INIT
 ========================= */
-
-function toggleSidebar(){
-sidebar.classList.toggle("show");
-}
-
-/* favorites */
-
-let favorites=
-JSON.parse(localStorage.getItem("favorites")||"[]");
-
-function renderSidebar(list=channels){
-
-const container =
-document.getElementById("channelList");
-
-container.innerHTML="";
-
-list.forEach(ch=>{
-
-const div=document.createElement("div");
-div.className="channel";
-
-div.innerHTML=`
-<img class="logo" src="${ch.logo||''}">
-<span>${ch.name}</span>
-<div class="star">
-${favorites.includes(ch.url)?"⭐":"☆"}
-</div>
-`;
-
-div.onclick=()=>{
-switchChannel(ch);
-sidebar.classList.remove("show");
-};
-
-div.querySelector(".star")
-.onclick=(e)=>{
-e.stopPropagation();
-
-if(favorites.includes(ch.url)){
-favorites=favorites.filter(f=>f!==ch.url);
-}else{
-favorites.push(ch.url);
-}
-
-localStorage.setItem(
-"favorites",
-JSON.stringify(favorites)
-);
-
-renderSidebar(list);
-};
-
-container.appendChild(div);
-
-});
-
-}
-
-/* SEARCH */
-
-document.getElementById("search")
-.oninput=(e)=>{
-
-const q=e.target.value.toLowerCase();
-
-renderSidebar(
-channels.filter(c=>
-c.name.toLowerCase().includes(q)
-)
-);
-
-};
-
-/* =========================
-DRM HELPERS
-========================= */
-
-function normalizeClearKey(kid,key){
-
-kid=kid.replace(/-/g,'').toLowerCase();
-key=key.replace(/-/g,'').toLowerCase();
-
-return {kid,key};
-}
-
-function base64ToHex(base64){
-
-const raw=atob(base64);
-let hex="";
-
-for(let i=0;i<raw.length;i++){
-hex+=raw.charCodeAt(i)
-.toString(16)
-.padStart(2,'0');
-}
-
-return hex;
-}
-
-function parseClearKeyJSON(json){
-
-try{
-
-const data=JSON.parse(json);
-
-const kid=base64ToHex(data.keys[0].kid);
-const key=base64ToHex(data.keys[0].k);
-
-return normalizeClearKey(kid,key);
-
-}catch{
-return null;
-}
-
-}
-
-/* =========================
-PLAYER CORE
-========================= */
+jw.setup({width:"100%",height:"100%",autostart:true});
 
 async function initShaka(){
-
-if(!shaka.Player.isBrowserSupported())
-return;
-
-player=new shaka.Player(video);
-
-player.addEventListener("error",()=>{
-recoverStream();
-});
-
-}
-
-initShaka();
-
-async function destroyPlayers(){
-
-try{
-if(player){
-await player.destroy();
-player=null;
-}
-}catch{}
-
-try{
-if(hls){
-hls.destroy();
-hls=null;
-}
-}catch{}
-
-video.removeAttribute("src");
-video.load();
-
+  shakaPlayer=new shaka.Player(video);
 }
 
 /* =========================
-SMART SWITCH
+UI
 ========================= */
+function toggleSidebar(){sidebar.classList.toggle("show")}
 
-async function switchChannel(channel){
-
-if(switching) return;
-switching=true;
-
-currentChannel=channel;
-
-await destroyPlayers();
-
-const url=channel.url;
-
-try{
-
-/* DASH */
-
-if(url.includes(".mpd")){
-
-await initShaka();
-
-if(channel.kid && channel.key){
-
-await player.configure({
-drm:{
-clearKeys:{
-[channel.kid]:channel.key
+/* =========================
+EPG
+========================= */
+async function loadEPG(){
+  const xml=new DOMParser().parseFromString(
+    await fetch("https://vnepg.site/epg.xml").then(r=>r.text()),
+    "text/xml"
+  );
+  xml.querySelectorAll("programme").forEach(p=>{
+    const ch=p.getAttribute("channel");
+    if(!epgData[ch]) epgData[ch]=[];
+    epgData[ch].push({
+      title:p.querySelector("title")?.textContent||""
+    });
+  });
 }
-}
-});
+const nowEPG=id=>epgData[id]?.[0]?.title||"";
 
-}
-
-await player.load(url);
-video.play();
-
-switching=false;
-return;
-}
-
-/* HLS */
-
-if(url.includes(".m3u8")){
-
-if(Hls.isSupported()){
-
-hls=new Hls({
-lowLatencyMode:true
-});
-
-hls.loadSource(url);
-hls.attachMedia(video);
-
-hls.on(Hls.Events.ERROR,()=>{
-recoverStream();
-});
-
-}else{
-
-video.src=url;
+/* =========================
+RENDER
+========================= */
+function render(list){
+  const box=document.getElementById("channelList");
+  box.innerHTML="";
+  list.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="channel";
+    d.innerHTML=`
+      <img class="logo" src="${c.logo||''}">
+      <div>
+        <b>${c.name}</b>
+        <div class="epg">${nowEPG(c.tvg)}</div>
+      </div>`;
+    d.onclick=()=>play(c);
+    box.appendChild(d);
+  });
 }
 
-video.play();
-switching=false;
-return;
+function renderGroups(){
+  const g=document.getElementById("group");
+  g.innerHTML="<option value=''>All groups</option>";
+  [...new Set(channels.map(c=>c.group).filter(Boolean))]
+    .forEach(gr=>{
+      g.innerHTML+=`<option>${gr}</option>`;
+    });
 }
 
-/* NORMAL */
+document.getElementById("search").oninput=e=>{
+  filter();
+};
+document.getElementById("group").onchange=filter;
 
-video.src=url;
-video.play();
-
-}catch{
-
-recoverStream();
-
-}
-
-switching=false;
+function filter(){
+  const q=search.value.toLowerCase();
+  const g=group.value;
+  render(channels.filter(c=>
+    c.name.toLowerCase().includes(q) &&
+    (!g || c.group===g)
+  ));
 }
 
 /* =========================
-RECOVERY
+PLAYER SWITCH
 ========================= */
+async function play(ch){
+  current=ch;
+  sidebar.classList.remove("show");
 
-function recoverStream(){
+  jw.stop();
+  jw.getContainer().style.display="none";
+  document.getElementById("shaka").style.display="none";
 
-if(!currentChannel) return;
+  // DASH + DRM → SHAKA
+  if(ch.url.includes(".mpd") && ch.kid){
+    document.getElementById("shaka").style.display="block";
+    if(!shakaPlayer) await initShaka();
+    await shakaPlayer.configure({
+      drm:{clearKeys:{[ch.kid]:ch.key}}
+    });
+    await shakaPlayer.load(ch.url);
+    video.play();
+    return;
+  }
 
-setTimeout(()=>{
-switchChannel(currentChannel);
-},3000);
-
+  // HLS / NON DRM → JW
+  jw.getContainer().style.display="block";
+  jw.load([{file:ch.url}]);
+  jw.play();
 }
 
 /* =========================
-NETWORK
+M3U PARSER
 ========================= */
-
-window.addEventListener("offline",()=>{
-video.pause();
-});
-
-window.addEventListener("online",()=>{
-recoverStream();
-});
-
-/* =========================
-M3U PARSER + KODIPROP
-========================= */
-
-function parseM3U(data){
-
-const lines=data.split("\n");
-
-let channel={};
-
-const result=[];
-
-for(let line of lines){
-
-line=line.trim();
-
-/* EXTINF */
-if(line.startsWith("#EXTINF")){
-
-channel={};
-
-channel.name=
-line.split(",").pop();
-
-const logoMatch=
-line.match(/tvg-logo="([^"]+)"/);
-
-if(logoMatch)
-channel.logo=logoMatch[1];
-
-}
-
-/* KODIPROP */
-else if(line.includes("license_key=")){
-
-let drm=line.split("license_key=")[1].trim();
-
-/* JSON */
-if(drm.startsWith("{")){
-
-const parsed=
-parseClearKeyJSON(drm);
-
-if(parsed){
-channel.kid=parsed.kid;
-channel.key=parsed.key;
-}
-
-/* HEX */
-}else if(drm.includes(":")){
-
-let [kid,key]=drm.split(":");
-
-const norm=
-normalizeClearKey(kid,key);
-
-channel.kid=norm.kid;
-channel.key=norm.key;
-}
-
-}
-
-/* URL */
-else if(line.startsWith("http")){
-
-channel.url=line;
-result.push(channel);
-channel={};
-
-}
-
-}
-
-return result;
-
+function parseM3U(txt){
+  const l=txt.split("\n");
+  let c={},out=[];
+  for(let line of l){
+    line=line.trim();
+    if(line.startsWith("#EXTINF")){
+      c={};
+      c.name=line.split(",").pop();
+      c.logo=line.match(/tvg-logo="([^"]+)"/)?.[1];
+      c.tvg=line.match(/tvg-id="([^"]+)"/)?.[1];
+      c.group=line.match(/group-title="([^"]+)"/)?.[1];
+    }
+    else if(line.includes("license_key=")){
+      const [kid,key]=line.split("license_key=")[1].split(":");
+      c.kid=kid?.replace(/-/g,"");
+      c.key=key?.replace(/-/g,"");
+    }
+    else if(line.startsWith("http")){
+      c.url=line;
+      out.push(c);
+    }
+  }
+  return out;
 }
 
 /* =========================
-LOAD PLAYLIST
+BOOT
 ========================= */
-
-const m3uUrl =
-"https://raw.githubusercontent.com/huh03482-dotcom/lol/refs/heads/main/playlist_clearkey_json_inline.m3u";
-
-fetch(m3uUrl)
-.then(r=>r.text())
-.then(data=>{
-
-channels=parseM3U(data);
-
-renderSidebar();
-
-if(channels.length)
-switchChannel(channels[0]);
-
-});
-
+(async()=>{
+  await loadEPG();
+  const m3u=await fetch(
+    "https://raw.githubusercontent.com/huh03482-dotcom/lol/refs/heads/main/playlist_clearkey_json_inline.m3u"
+  ).then(r=>r.text());
+  channels=parseM3U(m3u);
+  renderGroups();
+  render(channels);
+  play(channels[0]);
+})();
 </script>
+
 </body>
-  </html>
+</html>
