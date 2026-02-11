@@ -227,7 +227,7 @@ switching=false;
 }
 
 /* EPG */
-const EPG_URL="https://lichphatsong.site/schedule/epg.xml.gz";
+const EPG_URL="https://vnepg.site/epg.xml.gz";
 let epgPrograms=[];
 
 async function loadEPG(){
@@ -280,7 +280,7 @@ return out;
 
 /* LOAD */
 loadEPG();
-fetch("https://raw.githubusercontent.com/dovietsy/acestreamfb/refs/heads/main/acestreamfb.txt")
+fetch("https://raw.githubusercontent.com/huh03482-dotcom/lol/refs/heads/main/playlist_clearkey_json_inline.m3u")
 .then(r=>r.text())
 .then(t=>{
 channels=parseM3U(t);
