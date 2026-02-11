@@ -2975,3 +2975,55 @@ https://cdn6.goprimetime.info/feed/eI5rczhSQpWBcgOtqRLNWw/chpptvhd3/index.m3u8
 https://cdn6.goprimetime.info/feed/eI5rczhSQpWBcgOtqRLNWw/chmono293/index.m3u8
 #EXTINF:-1 group-title="🇰🇭| Campuchia" tvg-logo="https://1.bp.blogspot.com/-eaJhNFbzINk/XlhGheWJpgI/AAAAAAAAJ8M/k3fnwM6DPfso2q3pF8yzQWvg8ZScKF2dQCLcBGAsYHQ/s1600/HMHD.png", Ramsey HangMeas Melody UHD
 http://abclive.malisresidences.com:1935/hmmel/_definst_/smil:hmmel.smil/playlist.m3u8
+#EXTINF:0 group-title="🔴|BÓNG CHUYỀN" tvg-logo="https://onplus.com.vn/logo/logo_tet.png" catchup="append" catchup-days="2" catchup-source="https://api.vthanhtivi.pw/v1/dvr/vieon/vtvcab3-on-sports/${start}/${offset}", BÓNG CHUYỀN
+http://phuockhai.giize.com:1979/onlive/play.php?id=bongchuyen
+#EXTINF:0 group-title="🔴|BÓNG ĐÁ ĐỨC" tvg-logo="https://stimg.onlive.vn/LOGO/bu/bundesliga/bundesliga.jpg" catchup="append" catchup-days="2" catchup-source="https://api.vthanhtivi.pw/v1/dvr/vieon/vtvcab3-on-sports/${start}/${offset}", BÓNG ĐÁ ĐỨC
+http://phuockhai.giize.com:1979/onlive/play.php?id=bundesliga
+#EXTINF:0 group-title="🔴|BÓNG ĐÁ PHÁP" tvg-logo="https://cdn-01.onlive.vn/category_img/2023/11/20/1620655b302aa410b.png" catchup="append" catchup-days="2" catchup-source="https://api.vthanhtivi.pw/v1/dvr/vieon/vtvcab3-on-sports/${start}/${offset}", BÓNG ĐÁ PHÁP
+http://phuockhai.giize.com:1979/onlive/play.php?id=ligue1
+#EXTINF:0 group-title="🔴|BÓNG ĐÁ Ý" tvg-logo="https://stimg.onlive.vn/LOGO/se/seriea/seriea.jpg?dummy=80316355" catchup="append" catchup-days="2" catchup-source="https://api.vthanhtivi.pw/v1/dvr/vieon/vtvcab3-on-sports/${start}/${offset}", BÓNG ĐÁ Ý
+http://phuockhai.giize.com:1979/onlive/play.php?id=seriea
+#EXTINF:0 group-title="🔴|VÕ THUẬT" tvg-logo="https://cdn-01.onlive.vn/category_img/2023/06/15/1686817673.jpg" catchup="append" catchup-days="2" catchup-source="https://api.vthanhtivi.pw/v1/dvr/vieon/vtvcab3-on-sports/${start}/${offset}", VÕ THUẬT
+http://phuockhai.giize.com:1979/onlive/play.php?id=vothuatvn&retry=1
+
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA Ý + ĐỨC" tvg-logo="https://imgvlive.vtvcab.vn/720X405/5145995d-794d-4329-a44b-d8caffdceb40.jpg",GIẢI Ý + ĐỨC
+http://phuockhai.giize.com:1979/tvmienphi/play11.php?id=onfootball
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA Ý + ĐỨC" tvg-logo="https://imgvlive.vtvcab.vn/720X405/60237478-0dc1-4480-a050-b2a84e4b9b69.jpg",GIẢI Ý + ĐỨC
+http://phuockhai.giize.com:1979/tvmienphi/play11.php?id=onsportnews
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA Ý + ĐỨC" tvg-logo="https://imgvlive.vtvcab.vn/720X405/f53c0d1b-0268-4d1e-b150-7d797354b925.jpg",GIẢI Ý + ĐỨC
+http://phuockhai.giize.com:1979/tvmienphi/play11.php?id=onsports
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA Ý + ĐỨC" tvg-logo="https://assets-vtvcab.gviet.vn/images/hq/posters/onsportscongmoi1.jpg",GIẢI Ý + ĐỨC
+http://phuockhai.giize.com:1979/tvmienphi/play11.php?id=onsportplus
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA Ý + ĐỨC" tvg-logo="https://i.imgur.com/UNxM1Hs.jpg",GIẢI Ý + ĐỨC
+http://phuockhai.giize.com:18484/stream/vtvprime/sctv9/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+
+
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA TÂY BAN NHA" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/a/a0/SCTV15.jpg",GIẢI TÂY BAN NHA
+http://phuockhai.giize.com:18484/stream/vtvprime/sctv15/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA TÂY BAN NHA" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/9/9e/SCTV17.jpg",GIẢI TÂY BAN NHA
+http://phuockhai.giize.com:18484/stream/vtvprime/sctv17/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|GIẢI QUỐC GIA TÂY BAN NHA" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/b/b4/SCTV22.jpg",GIẢI TÂY BAN NHA
+http://phuockhai.giize.com:18484/stream/vtvprime/sctv22/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/24/21/1727189720461/dc4ee8910c25_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk1/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/24/21/1727189794311/c4d18ecff9f7_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk2/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/24/21/1727189872609/e569653d09d3_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk3/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/5db9e5a7d0fd_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk4/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/24/21/1727189978632/51f31c767a91_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk5/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/24/22/1727190010448/7463a4b5c14d_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk6/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/24/22/1727190077791/4922144877f1_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk7/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/24/22/172719012995/8df54b2f7576_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk8/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/30/22/1727709197325/1be646ba55c5_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk9/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/30/22/1727709197325/1be646ba55c5_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk11/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
+#EXTINF:0 group-title="🔴|C1 CHÂU ÂU" tvg-logo="https://img-zlr1.tv360.vn/image1/2024/09/30/22/1727709197325/1be646ba55c5_640_360.png",C1 CHÂU ÂU
+http://phuockhai.giize.com:18484/stream/360/sk11/master.m3u8?u=admin&p=3ddd7ca7cc753c4b6bd5efbdcdbd752a0133cd791e72e287cbf591a0130e5669
