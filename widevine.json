@@ -1,0 +1,27 @@
+{
+  "ec": 0,
+  "license": "U01XVgAAA+MAAACMAXwODg0HAQsKBQkCABAGAwTxVv5w/JglO1z1qjuANNylAAAAY8SsbZ/sO+gYHOjpdxnuGg05NazClD/m/TnP9vU4Ky5+CGAQJvD8Kow56qtzl4OMLQa5Eex67WeIG4GRaB5XmM20ZWihn9DuoywzEyM6MqdkHH8m2mra0qwdkEmNx9TYLlPhUqSXPpuipCDwnOYszTdGHj7Q1V4tJxLke3MOtSKrq4CiPj+0xc7ydpzgvzkfgJ++KRNQJkd9We0lSg+AN46mvY+jMY/mXfJDqeWQHvtCOiFjz6YdPAZ6zmwh7GPEZzE4OoIbNgokNz+Liz7rjhv58yie/6r5hFWV8ZCzTDRC+T1VXEQ6wrO7oyFWalm9Cdr+El/KZnrcRUtMOMfguV+sY1i2FNp7zdCTyZqXG+HT1nQq5ES8E5Qa9gWfZW1eB3lxMfVD2Ji5I5ZGGrz1gg7RXAnPc92sKRJ81i1y7MN/+ts3sGiuUFdqKG3RlXrHXv+W6rHLPh4ZOcLG3bOuazv3w2itYhHDPqL5VJuy7IXD08rwXV7tpJ+DHd+T/nDtXGR/ffvSaQgzff0tQV4Xj2JqsIuV/yXuAjAyMtwfXh7mIJAvKHaFv5sS3su/4H6ZAZOwCsQNA5kTP8j2ikbtKJGBXe/nGKXcBNT1tP6pB9MxX8FecNdX9ojJX0AlqXnilXuleCs0QywCe9K8i3L+e0JwD+vKA9SZnutw7x+wjTzRiX9SFfZI8J/DsNEi1H/ckZXUzHqDrO1ocVRyT6lh7t7yMzyOxL+rSIrcYM7jhUB5mMFkTD6crWnQdheTVaebTuoBY9ls7I0QhiKYJmNwtTwcZBL1BiClZh/QcFmsICU+OGTO0PwSwRkZ7otEz+jCWOkFnINUY+nGLyR4b/fJR6//0VT0G4vxVQUXZx2c+ooTal2EBdmA6zvotjVwGSEhqyGeP3Z0YezVnXLHcLAe86pqxMzNRIE5aRudzPuPjayNORUELT6vhpStmLn296ggMzXGA81MMu2PVLZSB/HaDHqSC5bMznzQr1YDqRQvJTvpeltB59BaIjcLkXl1Of3qUmJ5a8X0Tw6FiT7kuKck3ywcBxZTYtmY+PRAmsaLBaJ2Rl1Ps4I5eENP+yFtIK4JsICbiSUUr+7V2W23+rc5niYWDR+zgjl4Q0/7IW0grgmwgJrZ9cR/PgUJvDf7tjifJhYNH7OCOXhCTvogqOVrzGVVTlwmF6ztxsp+pABNw2TN/eb1Hy6V1P/zR5z0uTeQCZi9z9bvIHfbRY+qmH5WALOHinmR7petdn1D/lmYSyI4UEs=",
+  "reqId": "40a06d97-a771-c791-a922-1607bf2e4c7a",
+  "clientInfo": {
+    "platform": "android",
+    "cpuInfo": "qcom",
+    "osBuild": "TKQ1.221114.001 test-keys",
+    "osVersion": "13",
+    "deviceModel": "220333QAG",
+    "appVersion": "2.6.5",
+    "packageName": "MyTV",
+    "appVersionCode": 159,
+    "deviceId": "0b6458d3e190848a",
+    "packageId": "vn.mytvnet.mobileb2c",
+    "packerVersion": "1.0.3",
+    "signature": "95FFB79032A3E919EEF4E152C5D5C2BD732ACCC3",
+    "sdkVersion": "33",
+    "fingerprint": "Redmi/fog_global/fog:13/TKQ1.221114.001/V14.0.9.0.TGEMIXM:user/release-keys",
+    "manufacture": "Xiaomi",
+    "buildHost": "pangu-build-component-system-468912-351cs-cncfd-tsb5f",
+    "buildProduct": "fog_global",
+    "brand": "Redmi",
+    "BuildBoard": "fog",
+    "deviceName": "fog"
+  }
+}
